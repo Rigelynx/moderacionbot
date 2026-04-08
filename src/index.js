@@ -19,7 +19,7 @@ const client = new Client({
 });
 
 client.commands = new Map();
-client.prefix = '!';
+client.prefix = '/';
 client.mutedRoleName = 'Silenciado';
 client.logChannelName = 'logs-moderacion';
 client.warningCounts = new Map();
