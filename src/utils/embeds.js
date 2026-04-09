@@ -1,4 +1,5 @@
 import { EmbedBuilder } from 'discord.js';
+import { isLogsEnabled, getLogChannelName } from './config.js';
 
 export function createModerationEmbed({ color, title, user, moderator, fields = [] }) {
     return new EmbedBuilder()
@@ -13,7 +14,10 @@ export function createModerationEmbed({ color, title, user, moderator, fields = 
 }
 
 export async function sendLog(guild, content, client) {
-    const logChannel = guild.channels.cache.find(ch => ch.name === client.logChannelName);
+    if (!isLogsEnabled(guild.id)) return;
+    
+    const channelName = getLogChannelName(guild.id);
+    const logChannel = guild.channels.cache.find(ch => ch.name === channelName);
     if (logChannel) {
         await logChannel.send(content);
     }

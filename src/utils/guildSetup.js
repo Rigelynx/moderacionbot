@@ -1,4 +1,5 @@
 import { logSuccess, logError } from './logger.js';
+import { getLogChannelName } from './config.js';
 
 export async function setupGuild(guild, client) {
     await createMutedRole(guild, client);
@@ -25,7 +26,8 @@ async function createMutedRole(guild, client) {
 }
 
 async function createLogChannel(guild, client) {
-    const existingChannel = guild.channels.cache.find(ch => ch.name === client.logChannelName);
+    const channelName = getLogChannelName(guild.id);
+    const existingChannel = guild.channels.cache.find(ch => ch.name === channelName);
     
     if (existingChannel) return existingChannel;
     
@@ -33,7 +35,7 @@ async function createLogChannel(guild, client) {
         const category = guild.channels.cache.find(c => c.name === 'Moderación' && c.type === 4);
         
         const channel = await guild.channels.create({
-            name: client.logChannelName,
+            name: channelName,
             type: 0,
             parent: category?.id,
             permissionOverwrites: [

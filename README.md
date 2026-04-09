@@ -1,89 +1,135 @@
-# 🤖 Bot de Discord - Moderación
+# 🤖 ARMANDO - Bot de Discord para Moderación
 
-Bot de Discord para moderación con múltiples comandos útiles.
+## 📋 Descripción General
 
-## 📋 Requisitos
+**ARMANDO** es un bot de Discord diseñado para facilitar la moderación de servidores. Proporciona herramientas completas para gestionar miembros, roles, canales y permisos mediante slash commands intuitivos.
 
-- Node.js v16.11.0 o superior
-- Un bot de Discord con los siguientes permisos:
-  - Administrador o permisos específicos según comandos
+---
 
-## 🚀 Instalación
+## 📁 Estructura del Proyecto
 
-1. Clona o descarga el proyecto
-2. Instala las dependencias:
-   ```bash
-   npm install
-   ```
+```
+discord-moderation-bot/
+├── src/
+│   ├── commands/
+│   │   ├── moderation/     # 13 comandos de moderación
+│   │   ├── info/          # 3 comandos de información
+│   │   └── utilities/     # 2 comandos utilitarios
+│   ├── events/            # Manejo de eventos
+│   └── utils/             # Utilidades y configuración
+├── data/                  # Archivos de configuración (JSON)
+├── deploy-commands.js     # Script para registrar slash commands
+├── index.js               # Punto de entrada
+└── .env                   # Variables de entorno
+```
 
-3. Crea un archivo `.env` con tu token:
-   ```
-   TOKEN=tu_token_de_discord_aqui
-   ```
+---
 
-4. Ejecuta el bot:
-   ```bash
-   npm start
-   ```
-
-## 🔧 Permisos Necesarios
-
-El bot necesita los siguientes permisos en Discord:
-
-- **Gestionar mensajes** - Para purgar mensajes
-- **Banear miembros** - Para banear usuarios
-- **Expulsar miembros** - Para kick
-- **Gestionar canales** - Para lock/unlock/slowmode
-- **Moderar miembros** - Para mute/unmute
-- **Ver canales** - Para funcionamiento general
-- **Enviar mensajes** - Para responder
-- **Lectura de historial** - Para comandos
-
-## 📝 Comandos
+## 🎮 Comandos Disponibles (19 total)
 
 ### 🔨 Moderación
-| Comando | Descripción |
-|---------|-------------|
-| `!ban @usuario [razón]` | Banear a un usuario |
-| `!kick @usuario [razón]` | Expulsar a un usuario |
-| `!mute @usuario [duración]` | Silenciar (duración: 10s, 5m, 1h, 1d) |
-| `!unmute @usuario` | Quitar silencio |
-| `!warn @usuario [razón]` | Advertir usuario (5 warns = ban) |
-| `!warnings @usuario` | Ver advertencias de un usuario |
-| `!clear [cantidad]` | Eliminar mensajes (1-100) |
 
-### 🔒 Canal
 | Comando | Descripción |
 |---------|-------------|
-| `!lock` | Bloquear canal |
-| `!unlock` | Desbloquear canal |
-| `!slowmode [segundos]` | Activar modo lento (0-21600s) |
+| `/ban @usuario [razón]` | Banear a un usuario del servidor |
+| `/kick @usuario [razón]` | Expulsar a un usuario |
+| `/mute @usuario cantidad unidad` | Silenciar usuario (seg/min/horas/días) |
+| `/unmute @usuario` | Quitar silencio a un usuario |
+| `/warn @usuario [razón]` | Advertir a un usuario (5 warns = ban automático) |
+| `/warnings [@usuario]` | Ver advertencias de un usuario |
+| `/clear cantidad` | Eliminar mensajes (filtra automáticos los >14 días) |
+| `/setnick @usuario [apodo]` | Cambiar el apodo de un miembro |
 
-### 👤 Usuario
+### 👔 Gestión de Roles
+
 | Comando | Descripción |
 |---------|-------------|
-| `!avatar [@usuario]` | Ver avatar de un usuario |
-| `!userinfo [@usuario]` | Información del usuario |
-| `!serverinfo` | Información del servidor |
+| `/role create nombre [color]` | Crear un rol con color personalizado |
+| `/role delete rol` | Eliminar un rol |
+| `/role add @usuario rol` | Añadir un rol a un usuario |
+| `/role remove @usuario rol` | Quitar un rol a un usuario |
+| `/role list` | Listar todos los roles del servidor |
+
+### 🔐 Permisos de Canal
+
+| Comando | Descripción |
+|---------|-------------|
+| `/perm view canal rol estado` | Configurar permiso para ver canal |
+| `/perm send canal rol estado` | Configurar permiso para enviar mensajes |
+| `/perm embed canal rol estado` | Configurar permiso para insertar enlaces |
+| `/perm manage canal rol estado` | Configurar permiso para gestionar canal |
+| `/perm speak canal rol estado` | Configurar permiso para hablar en voz |
+
+**Estados:** `allow` (permitir) / `deny` (denegar) / `reset` (resetear)
+
+### 🔒 Control de Canales
+
+| Comando | Descripción |
+|---------|-------------|
+| `/lock` | Bloquear el canal actual |
+| `/unlock` | Desbloquear el canal actual |
+| `/slowmode [segundos]` | Configurar modo lento (0-21600s) |
+
+### 📝 Sistema de Logs
+
+| Comando | Descripción |
+|---------|-------------|
+| `/logs set #canal` | Cambiar el canal de logs |
+| `/logs enable` | Activar el sistema de logs |
+| `/logs disable` | Desactivar el sistema de logs |
+| `/logs status` | Ver estado actual de logs |
+
+### 👤 Información
+
+| Comando | Descripción |
+|---------|-------------|
+| `/avatar [@usuario]` | Ver el avatar de un usuario |
+| `/userinfo [@usuario]` | Ver información detallada de un usuario |
+| `/serverinfo` | Ver información del servidor |
 
 ### 📊 Utilidades
+
 | Comando | Descripción |
 |---------|-------------|
-| `!ping` | Ver latencia del bot |
-| `!help` | Mostrar lista de comandos |
+| `/ping` | Ver latencia del bot |
+| `/help` | Mostrar lista de todos los comandos |
 
-## ⚙️ Configuración Automática
+---
 
-El bot crea automáticamente:
-- Rol **"Silenciado"** - Se asigna a usuarios silenciados
-- Canal **"logs-moderacion"** - Canal privado para logs de moderación
+## ⚙️ Características Técnicas
 
-## 🔒 Seguridad
+- **Framework:** Discord.js v14
+- **Lenguaje:** JavaScript (ES Modules)
+- **Persistencia:** Configuración guardada en JSON
+- **Logs:** Registro automático de acciones de moderación
+- **Slash Commands:** Todos los comandos usan la API moderna de Discord
 
-- Los comandos de moderación requieren permisos de administrador o permisos específicos
-- Los logs se envían a un canal privado
-- Sistema de advertencias con ban automático a las 5 warns
+---
 
-## 📄 Licencia
+## 🚀 Comandos para Ejecutar
 
-MIT
+```bash
+npm install        # Instalar dependencias
+npm run deploy     # Registrar slash commands en Discord
+npm start         # Iniciar el bot
+npm run dev       # Iniciar en modo desarrollo (con reload automático)
+```
+
+---
+
+## 🔧 Configuración Requerida (.env)
+
+```env
+TOKEN=tu_token_de_discord
+CLIENT_ID=tu_client_id
+GUILD_ID=id_del_servidor  # Opcional - para comandos de servidor
+```
+
+---
+
+## 📝 Notas
+
+- El bot crea automáticamente el rol **"Silenciado"** y el canal **"logs-moderacion"** al unirse a un servidor
+- El sistema de warnings acumula 5 advertencias antes de banear automáticamente
+- Los logs solo se envían si el canal de logs existe y está activado
+- Los mensajes de más de 14 días no se pueden eliminar (limitación de Discord)

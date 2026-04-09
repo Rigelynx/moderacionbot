@@ -3,8 +3,19 @@ export default {
     once: false,
     
     async execute(interaction, client) {
-        if (!interaction.isButton()) return;
+        if (!interaction.isChatInputCommand()) return;
         
-        console.log(`Botón presionado: ${interaction.customId}`);
+        const command = client.slashCommands.get(interaction.commandName);
+        if (!command) return;
+        
+        try {
+            await command.execute(interaction, client);
+        } catch (error) {
+            console.error(`Error ejecutando slash command ${interaction.commandName}:`, error);
+            await interaction.reply({
+                content: '❌ Hubo un error al ejecutar el comando.',
+                flags: 64
+            });
+        }
     }
 };

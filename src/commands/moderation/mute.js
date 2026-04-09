@@ -4,39 +4,69 @@ import { parseDuration } from '../../utils/helpers.js';
 export const command = {
     name: 'mute',
     description: 'Silenciar a un usuario',
-    requirePermissions: ['ModerateMembers'],
-    usage: '!mute @usuario [duración]'
-};
-
-export async function execute(message, args, client) {
-    const user = message.mentions.members.first() || message.guild.members.cache.get(args[0]);
-    const duration = args[1];
-    
-    if (!user) {
-        return message.reply('❌ Menciona un usuario o proporciona su ID.');
-    }
-    
-    if (user.isCommunicationDisabled()) {
-        return message.reply('❌ Este usuario ya está silenciado.');
-    }
-    
-    let durationText = 'indefinido';
-    if (duration) {
-        const durationMs = parseDuration(duration);
-        if (durationMs) {
-            await user.timeout(durationMs);
-            durationText = duration;
+    options: [
+        {
+            name: 'usuario',
+            type: 6,
+            description: 'Usuario a silenciar',
+            required: true
+        },
+        {
+            name: 'cantidad',
+            type: 4,
+            description: 'Cantidad de tiempo',
+            required: false,
+            min_value: 1,
+            max_value: 2147483647
+        },
+        {
+            name: 'unidad',
+            type: 3,
+            description: 'Unidad de tiempo',
+            required: false,
+            choices: [
+                { name: 'Segundos', value: 's' },
+                { name: 'Minutos', value: 'm' },
+                { name: 'Horas', value: 'h' },
+                { name: 'Días', value: 'd' }
+            ]
         }
+    ],
+    async execute(interaction, client) {
+        const user = interaction.options.getMember('usuario');
+        const cantidad = interaction.options.getInteger('cantidad');
+        const unidad = interaction.options.getString('unidad');
+        
+        if (!user) {
+            return interaction.reply({ content: '❌ Usuario no encontrado.', flags: 64 });
+        }
+        
+        if (user.isCommunicationDisabled()) {
+            return interaction.reply({ content: '❌ Este usuario ya está silenciado.', flags: 64 });
+        }
+        
+        let durationText = 'indefinido';
+        let durationMs = null;
+        
+        if (cantidad && unidad) {
+            const multipliers = { s: 1000, m: 60000, h: 3600000, d: 86400000 };
+            durationMs = cantidad * multipliers[unidad];
+            durationText = `${cantidad} ${unidad === 's' ? 'segundo(s)' : unidad === 'm' ? 'minuto(s)' : unidad === 'h' ? 'hora(s)' : 'día(s)'}`;
+            
+            if (durationMs) {
+                await user.timeout(durationMs);
+            }
+        }
+        
+        const embed = createModerationEmbed({
+            color: 0x808080,
+            title: '🔇 Usuario Silenciado',
+            user,
+            moderator: interaction.user,
+            fields: [{ name: 'Duración', value: durationText }]
+        });
+        
+        await interaction.reply({ embeds: [embed] });
+        await sendLog(interaction.guild, { embeds: [embed] }, client);
     }
-    
-    const embed = createModerationEmbed({
-        color: 0x808080,
-        title: '🔇 Usuario Silenciado',
-        user,
-        moderator: message.author,
-        fields: [{ name: 'Duración', value: durationText }]
-    });
-    
-    await message.reply({ embeds: [embed] });
-    await sendLog(message.guild, { embeds: [embed] }, client);
-}
+};

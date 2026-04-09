@@ -1,0 +1,6 @@
+{
+  "logs": {
+    "enabled": true,
+    "channelName": "logs-moderacion"
+  }
+}

@@ -1,25 +1,24 @@
 import { EmbedBuilder } from 'discord.js';
+import { sendLog } from '../../utils/embeds.js';
 
 export const command = {
     name: 'lock',
     description: 'Bloquear el canal actual',
-    requirePermissions: ['ManageChannels'],
-    usage: '!lock'
+    async execute(interaction, client) {
+        const channel = interaction.channel;
+        
+        await channel.permissionOverwrites.edit(interaction.guild.roles.everyone, {
+            SendMessages: false
+        });
+        
+        const embed = new EmbedBuilder()
+            .setColor(0xff0000)
+            .setTitle('🔒 Canal Bloqueado')
+            .setDescription(`El canal ${channel.name} ha sido bloqueado.`)
+            .addFields({ name: 'Moderador', value: interaction.user.tag })
+            .setTimestamp();
+        
+        await interaction.reply({ embeds: [embed] });
+        await sendLog(interaction.guild, { embeds: [embed] }, client);
+    }
 };
-
-export async function execute(message, args, client) {
-    const channel = message.channel;
-    
-    await channel.permissionOverwrites.edit(message.guild.roles.everyone, {
-        SendMessages: false
-    });
-    
-    const embed = new EmbedBuilder()
-        .setColor(0xff0000)
-        .setTitle('🔒 Canal Bloqueado')
-        .setDescription(`El canal ${channel.name} ha sido bloqueado.`)
-        .addFields({ name: 'Moderador', value: message.author.tag })
-        .setTimestamp();
-    
-    await message.reply({ embeds: [embed] });
-}
