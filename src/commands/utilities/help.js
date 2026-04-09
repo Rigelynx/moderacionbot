@@ -11,6 +11,7 @@ export const command = {
             .addFields(
                 { name: '🔨 Moderación', value: `
 \`/ban @usuario [razón]\` - Banear
+\`/unban @usuario [razón]\` - Desbanear
 \`/kick @usuario [razón]\` - Expulsar
 \`/mute @usuario <cantidad> <unidad>\` - Silenciar (seg/min/horas/días)
 \`/unmute @usuario\` - Desilenciar
