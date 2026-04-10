@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ModBot — Bot de Moderación para Discord</title>
+    <meta name="description" content="Bot de moderación avanzado para Discord. Protege tu servidor con comandos de ban, kick, mute, warn y más. Fácil de configurar, potente de usar.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/landing.css">
+</head>
+<body>
+    <!-- Animated background -->
+    <div class="bg-effects">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+        <div class="grid-overlay"></div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <span class="logo-icon">🛡️</span>
+                <span class="logo-text">ModBot</span>
+            </a>
+            <div class="nav-links">
+                <a href="#features">Características</a>
+                <a href="#commands">Comandos</a>
+                <a href="#stats">Estadísticas</a>
+                <a href="/dashboard" class="nav-btn">Dashboard</a>
+            </div>
+            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Abrir menú">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+        <!-- Mobile menu -->
+        <div class="mobile-menu" id="mobileMenu">
+            <a href="#features">Características</a>
+            <a href="#commands">Comandos</a>
+            <a href="#stats">Estadísticas</a>
+            <a href="/dashboard" class="nav-btn">Dashboard</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="hero">
+        <div class="hero-content">
+            <div class="hero-badge fade-in">
+                <span class="badge-dot"></span>
+                Online ahora
+            </div>
+            <h1 class="hero-title fade-in">
+                Moderación <span class="gradient-text">inteligente</span> para tu servidor
+            </h1>
+            <p class="hero-subtitle fade-in">
+                Protege tu comunidad de Discord con herramientas avanzadas de moderación. 
+                Ban, kick, mute, warn, logs automáticos y mucho más — todo en un solo bot.
+            </p>
+            <div class="hero-buttons fade-in">
+                <a href="https://discord.com/oauth2/authorize?client_id=1491566928945352735&permissions=8&scope=bot%20applications.commands" 
+                   target="_blank" class="btn btn-primary">
+                    <span class="btn-icon">➕</span>
+                    Invitar al servidor
+                </a>
+                <a href="/dashboard" class="btn btn-secondary">
+                    <span class="btn-icon">📊</span>
+                    Abrir Dashboard
+                </a>
+            </div>
+            <div class="hero-stats fade-in" id="heroStats">
+                <div class="hero-stat">
+                    <span class="hero-stat-number" data-target="0" id="stat-servers">0</span>
+                    <span class="hero-stat-label">Servidores</span>
+                </div>
+                <div class="hero-stat-divider"></div>
+                <div class="hero-stat">
+                    <span class="hero-stat-number" data-target="0" id="stat-users">0</span>
+                    <span class="hero-stat-label">Usuarios</span>
+                </div>
+                <div class="hero-stat-divider"></div>
+                <div class="hero-stat">
+                    <span class="hero-stat-number" data-target="0" id="stat-commands">0</span>
+                    <span class="hero-stat-label">Comandos</span>
+                </div>
+            </div>
+        </div>
+        <div class="hero-visual fade-in">
+            <div class="terminal-window">
+                <div class="terminal-header">
+                    <div class="terminal-dots">
+                        <span class="dot dot-red"></span>
+                        <span class="dot dot-yellow"></span>
+                        <span class="dot dot-green"></span>
+                    </div>
+                    <span class="terminal-title">ModBot — Terminal</span>
+                </div>
+                <div class="terminal-body">
+                    <div class="terminal-line" data-delay="0">
+                        <span class="t-prompt">$</span>
+                        <span class="t-cmd">/warn</span>
+                        <span class="t-arg">@usuario</span>
+                        <span class="t-text">spam en chat general</span>
+                    </div>
+                    <div class="terminal-line t-response" data-delay="1">
+                        <span class="t-success">✅</span>
+                        <span class="t-text">Advertencia #3 registrada. Usuario notificado.</span>
+                    </div>
+                    <div class="terminal-line" data-delay="2">
+                        <span class="t-prompt">$</span>
+                        <span class="t-cmd">/mute</span>
+                        <span class="t-arg">@usuario</span>
+                        <span class="t-text">30m — Múltiples advertencias</span>
+                    </div>
+                    <div class="terminal-line t-response" data-delay="3">
+                        <span class="t-success">🔇</span>
+                        <span class="t-text">Usuario silenciado por 30 minutos.</span>
+                    </div>
+                    <div class="terminal-line" data-delay="4">
+                        <span class="t-prompt">$</span>
+                        <span class="t-cmd">/logs</span>
+                        <span class="t-arg">enable</span>
+                    </div>
+                    <div class="terminal-line t-response" data-delay="5">
+                        <span class="t-success">📋</span>
+                        <span class="t-text">Logs de moderación activados en #logs-moderacion</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="section-container">
+            <div class="section-header fade-in">
+                <span class="section-badge">Características</span>
+                <h2 class="section-title">Todo lo que necesitas para <span class="gradient-text">moderar</span></h2>
+                <p class="section-subtitle">Herramientas poderosas diseñadas para mantener tu comunidad segura y organizada</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Acciones Rápidas</h3>
+                    <p>Ban, kick, mute y warn con un solo comando. Respuesta instantánea sin delay.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">📋</div>
+                    <h3>Logs Automáticos</h3>
+                    <p>Registro completo de todas las acciones de moderación en un canal dedicado.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">⚠️</div>
+                    <h3>Sistema de Warns</h3>
+                    <p>Advertencias persistentes con historial completo por usuario y servidor.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Control de Canales</h3>
+                    <p>Bloquea y desbloquea canales al instante. Slowmode configurable.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">🎭</div>
+                    <h3>Gestión de Roles</h3>
+                    <p>Asigna, retira y gestiona roles con comandos intuitivos y permisos flexibles.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">📊</div>
+                    <h3>Dashboard Web</h3>
+                    <p>Panel de control completo para gestionar tu servidor desde el navegador.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Commands Section -->
+    <section class="commands" id="commands">
+        <div class="section-container">
+            <div class="section-header fade-in">
+                <span class="section-badge">Comandos</span>
+                <h2 class="section-title">Comandos <span class="gradient-text">disponibles</span></h2>
+                <p class="section-subtitle">21 comandos slash organizados en 3 categorías</p>
+            </div>
+            <div class="commands-tabs fade-in">
+                <button class="tab-btn active" data-tab="moderation">🛡️ Moderación</button>
+                <button class="tab-btn" data-tab="info">ℹ️ Información</button>
+                <button class="tab-btn" data-tab="utilities">🔧 Utilidades</button>
+            </div>
+            <div class="commands-content">
+                <div class="commands-list active" id="tab-moderation">
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/ban</span>
+                        <span class="cmd-desc">Banea a un usuario del servidor</span>
+                    </div>
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/unban</span>
+                        <span class="cmd-desc">Desbanea a un usuario</span>
+                    </div>
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/kick</span>
+                        <span class="cmd-desc">Expulsa a un usuario del servidor</span>
+                    </div>
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/mute</span>
+                        <span class="cmd-desc">Silencia a un usuario temporalmente</span>
+                    </div>
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/unmute</span>
+                        <span class="cmd-desc">Quita el silencio a un usuario</span>
+                    </div>
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/warn</span>
+                        <span class="cmd-desc">Advierte a un usuario con razón</span>
+                    </div>
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/unwarn</span>
+                        <span class="cmd-desc">Elimina una advertencia</span>
+                    </div>
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/warnings</span>
+                        <span class="cmd-desc">Lista las advertencias de un usuario</span>
+                    </div>
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/clear</span>
+                        <span class="cmd-desc">Elimina mensajes del canal</span>
+                    </div>
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/lock</span>
+                        <span class="cmd-desc">Bloquea un canal</span>
+                    </div>
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/unlock</span>
+                        <span class="cmd-desc">Desbloquea un canal</span>
+                    </div>
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/slowmode</span>
+                        <span class="cmd-desc">Configura el modo lento</span>
+                    </div>
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/setnick</span>
+                        <span class="cmd-desc">Cambia el apodo de un usuario</span>
+                    </div>
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/role</span>
+                        <span class="cmd-desc">Gestiona roles de usuarios</span>
+                    </div>
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/perm</span>
+                        <span class="cmd-desc">Gestiona permisos de canales</span>
+                    </div>
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/logs</span>
+                        <span class="cmd-desc">Configura los logs de moderación</span>
+                    </div>
+                </div>
+                <div class="commands-list" id="tab-info">
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/avatar</span>
+                        <span class="cmd-desc">Muestra el avatar de un usuario</span>
+                    </div>
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/userinfo</span>
+                        <span class="cmd-desc">Información detallada de un usuario</span>
+                    </div>
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/serverinfo</span>
+                        <span class="cmd-desc">Información del servidor</span>
+                    </div>
+                </div>
+                <div class="commands-list" id="tab-utilities">
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/help</span>
+                        <span class="cmd-desc">Muestra la lista de comandos</span>
+                    </div>
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/ping</span>
+                        <span class="cmd-desc">Comprueba la latencia del bot</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section" id="stats">
+        <div class="section-container">
+            <div class="section-header fade-in">
+                <span class="section-badge">En vivo</span>
+                <h2 class="section-title">Estadísticas en <span class="gradient-text">tiempo real</span></h2>
+            </div>
+            <div class="stats-grid fade-in">
+                <div class="stat-card">
+                    <div class="stat-icon">🌐</div>
+                    <div class="stat-value" id="live-servers">—</div>
+                    <div class="stat-label">Servidores activos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-value" id="live-users">—</div>
+                    <div class="stat-label">Usuarios protegidos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⚡</div>
+                    <div class="stat-value" id="live-ping">—</div>
+                    <div class="stat-label">Latencia (ms)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⏱️</div>
+                    <div class="stat-value" id="live-uptime">—</div>
+                    <div class="stat-label">Tiempo activo</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="section-container">
+            <div class="cta-content fade-in">
+                <h2 class="cta-title">¿Listo para proteger tu <span class="gradient-text">servidor</span>?</h2>
+                <p class="cta-subtitle">Añade ModBot en segundos. Sin configuración complicada, sin pagos.</p>
+                <div class="cta-buttons">
+                    <a href="https://discord.com/oauth2/authorize?client_id=1491566928945352735&permissions=8&scope=bot%20applications.commands" 
+                       target="_blank" class="btn btn-primary btn-lg">
+                        Invitar ModBot gratis
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="section-container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <span class="logo-icon">🛡️</span>
+                    <span class="logo-text">ModBot</span>
+                </div>
+                <div class="footer-links">
+                    <a href="#features">Características</a>
+                    <a href="#commands">Comandos</a>
+                    <a href="/dashboard">Dashboard</a>
+                </div>
+                <p class="footer-copy">© 2026 ModBot — Hecho con ❤️ para Discord</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/js/landing.js"></script>
+</body>
+</html>

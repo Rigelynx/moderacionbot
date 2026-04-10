@@ -2,13 +2,14 @@
 
 ## Información General
 - **Framework:** discord.js v14.14.1
+- **Servidor Web:** Express v4.21
 - **Lenguaje:** JavaScript (ES Modules)
 - **Entrada principal:** `src/index.js`
 
 ## Estructura del Proyecto
 ```
 src/
-├── index.js              # Cliente principal, carga comandos y eventos
+├── index.js              # Cliente principal, carga comandos, eventos y servidor web
 ├── commands/
 │   ├── moderation/       # 16 comandos de moderación
 │   ├── info/              # 3 comandos de información
@@ -22,9 +23,25 @@ src/
 │   ├── helpers.js         # Utilidades varias
 │   ├── logger.js          # Logging consola
 │   └── guildSetup.js      # Setup automático de servidor
-└── data/
-    ├── config.json        # Configuración por servidor
-    └── warnings.json      # Advertencias persistentes
+├── data/
+│   ├── config.json        # Configuración por servidor
+│   └── warnings.json      # Advertencias persistentes
+└── web/
+    ├── server.js              # Servidor Express (puerto 3000)
+    ├── routes/
+    │   ├── auth.js            # OAuth2 Discord (login, callback, logout, /me)
+    │   └── api.js             # API REST (stats, guilds, warnings, config)
+    ├── middleware/
+    │   └── authMiddleware.js  # Verificación de sesión + permisos admin
+    └── public/
+        ├── index.html         # Landing page
+        ├── dashboard.html     # Dashboard de administración
+        ├── css/
+        │   ├── landing.css    # Estilos landing (dark theme, glassmorphism)
+        │   └── dashboard.css  # Estilos dashboard (sidebar, cards, tablas)
+        └── js/
+            ├── landing.js     # Animaciones, stats en vivo, tabs
+            └── dashboard.js   # Auth check, CRUD warnings/config
 ```
 
 ## Comandos (21 total)
@@ -62,11 +79,46 @@ src/
 | `/ping` | Ver latencia |
 | `/help` | Mostrar todos los comandos |
 
+## Panel Web (Dashboard)
+
+### Landing Page (`http://localhost:3000`)
+- Hero section con terminal animada mostrando comandos
+- Grid de características con glassmorphism
+- Lista de comandos con tabs por categoría
+- Estadísticas en vivo (servidores, usuarios, ping, uptime)
+- Botones de invitar bot y abrir dashboard
+- Diseño responsive, tema oscuro premium
+
+### Dashboard (`http://localhost:3000/dashboard`)
+- **Autenticación:** Login con Discord OAuth2
+- **Selector de servidores:** Lista servidores mutuos donde el usuario es admin
+- **Vista Resumen:** Stats del servidor + config rápida de logs
+- **Vista Advertencias:** Tabla de warns con opción de eliminar
+- **Vista Configuración:** Toggle de logs + selector de canal de logs
+
+### API REST
+| Endpoint | Método | Auth | Descripción |
+|----------|--------|------|-------------|
+| `/api/stats` | GET | No | Stats públicas del bot |
+| `/api/guilds` | GET | Sí | Servidores mutuos del usuario |
+| `/api/guilds/:id` | GET | Admin | Info detallada del servidor |
+| `/api/guilds/:id/warnings` | GET | Admin | Advertencias del servidor |
+| `/api/guilds/:id/warnings/:userId/:index` | DELETE | Admin | Eliminar advertencia |
+| `/api/guilds/:id/config` | GET | Admin | Configuración del servidor |
+| `/api/guilds/:id/config` | POST | Admin | Actualizar configuración |
+
+### Autenticación OAuth2
+- `/auth/login` — Redirige a Discord para autorizar
+- `/auth/callback` — Recibe token y guarda sesión
+- `/auth/logout` — Destruye sesión
+- `/auth/me` — Retorna usuario actual
+
 ## Sistema de Logs
 - Canal por defecto: `logs-moderacion`
 - Configuración **por servidor** en `data/config.json`
 - Funciones: `sendLog()`, `isLogsEnabled()`, `getLogChannelName()`
 - Se guarda en cada acción de moderación
+- Configurable desde Dashboard web o comandos slash
 
 ## Sistema de Advertencias
 - Máximo 5 advertencias
@@ -74,6 +126,7 @@ src/
 - Al desbanear: se resetean las advertencias
 - **Almacenamiento persistente** en `data/warnings.json`
 - Cada advertencia guarda: razón, moderador, fecha
+- Gestionable desde Dashboard web o comandos slash
 
 ## Configuración (por servidor)
 ```json
@@ -95,6 +148,7 @@ src/
 - Protección contra moderar al bot
 - Verificación de `bannable`/`kickable` antes de actuar
 - Error handler resistente a doble reply
+- Dashboard protegido con OAuth2 + verificación de permisos de admin por servidor
 
 ## Colores de Embeds
 - Rojo (0xff0000): Ban, Lock, Rol eliminado
@@ -113,19 +167,34 @@ src/
 - `removeWarning(guildId, userId, index)` - Quita advertencia
 - `getWarnings(guildId, userId)` - Lista de advertencias
 - `clearWarnings(guildId, userId)` - Limpia todas las advertencias
+- `startWebServer(client)` - Inicia servidor Express con el cliente de Discord
 
 ## Setup Automático de Servidor
 - Crea canal de logs si no existe (en categoría "Moderación")
 - Se ejecuta al conectar y al unirse a nuevo servidor
 
+## Dependencias
+```json
+{
+  "cookie-parser": "^1.4.7",
+  "discord.js": "^14.14.1",
+  "dotenv": "^16.4.5",
+  "express": "^4.21.2",
+  "express-session": "^1.18.1"
+}
+```
+
 ## Variables de Entorno (.env)
 ```
 TOKEN=tu_token_discord
 GUILD_ID=id_del_servidor (opcional, para comandos de prueba)
-CLIENT_ID=id_del_bot (opcional, se auto-detecta del token)
+CLIENT_ID=id_del_bot
+CLIENT_SECRET=secret_de_discord_oauth2
+SESSION_SECRET=cadena_aleatoria_para_sesiones
+BASE_URL=http://localhost:3000
 ```
 
 ## Scripts NPM
-- `npm start` - Iniciar bot
+- `npm start` - Iniciar bot + servidor web
 - `npm run dev` - Iniciar con --watch
 - `npm run deploy` - Registrar comandos slash (ejecutar una vez o al cambiar comandos)

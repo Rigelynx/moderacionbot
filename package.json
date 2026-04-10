@@ -10,7 +10,10 @@
     "deploy": "node deploy-commands.js"
   },
   "dependencies": {
+    "cookie-parser": "^1.4.7",
     "discord.js": "^14.14.1",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1"
   }
 }

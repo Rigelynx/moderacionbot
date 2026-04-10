@@ -7,6 +7,7 @@ import { handleError, logInfo, logSuccess } from './utils/logger.js';
 import { setupGuild } from './utils/guildSetup.js';
 import { loadConfig } from './utils/config.js';
 import { loadWarnings } from './utils/warnings.js';
+import { startWebServer } from './web/server.js';
 
 config();
 
@@ -62,6 +63,9 @@ client.on('ready', async () => {
     for (const guild of client.guilds.cache.values()) {
         await setupGuild(guild, client);
     }
+
+    // Start web server
+    startWebServer(client);
 });
 
 client.on('guildCreate', async (guild) => {
