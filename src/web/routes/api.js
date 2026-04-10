@@ -166,5 +166,72 @@ export function createApiRouter(client) {
         });
     });
 
+    // Guild users
+    router.get('/guilds/:id/users', requireAuth, requireGuildAdmin(client), async (req, res) => {
+        const guildId = req.params.id;
+        try {
+            const { getUsersByGuild } = await import('../../utils/users.js');
+            const guildUsers = getUsersByGuild(guildId);
+            
+            // Format as array
+            const result = Object.values(guildUsers).map(u => ({
+                id: u.discordId,
+                username: u.discordUsername,
+                avatar: u.discordAvatar,
+                registeredAt: u.registeredAt
+            }));
+            
+            res.json(result);
+        } catch (err) {
+            res.status(500).json({ error: 'Error leyendo usuarios' });
+        }
+    });
+
+    // Delete user registration
+    router.delete('/guilds/:id/users/:userId', requireAuth, requireGuildAdmin(client), async (req, res) => {
+        const { userId } = req.params;
+        try {
+            const { unregisterUser } = await import('../../utils/users.js');
+            const success = unregisterUser(userId);
+            
+            if (success) {
+                res.json({ success: true, message: 'Usuario eliminado' });
+            } else {
+                res.status(404).json({ error: 'Usuario no encontrado' });
+            }
+        } catch (err) {
+            res.status(500).json({ error: 'Error al eliminar usuario' });
+        }
+    });
+
+    // ──────────── Tickets Config ────────────
+    router.get('/guilds/:id/tickets/config', requireAuth, requireGuildAdmin(client), async (req, res) => {
+        try {
+            const guildId = req.params.id;
+            const { getTicketsConfig } = await import('../../utils/config.js');
+            const config = getTicketsConfig(guildId);
+            res.json(config);
+        } catch (err) {
+            res.status(500).json({ error: 'Error leyendo config de tickets' });
+        }
+    });
+
+    router.post('/guilds/:id/tickets/config', requireAuth, requireGuildAdmin(client), async (req, res) => {
+        try {
+            const guildId = req.params.id;
+            const { enabled, categoryId, roleId, logChannelId } = req.body;
+            const { setTicketsEnabled, setTicketsCategory, setTicketsRole, setTicketsLogChannel, getTicketsConfig } = await import('../../utils/config.js');
+
+            if (typeof enabled === 'boolean') setTicketsEnabled(guildId, enabled);
+            if (categoryId !== undefined) setTicketsCategory(guildId, categoryId || null);
+            if (roleId !== undefined) setTicketsRole(guildId, roleId || null);
+            if (logChannelId !== undefined) setTicketsLogChannel(guildId, logChannelId || null);
+
+            res.json(getTicketsConfig(guildId));
+        } catch (err) {
+            res.status(500).json({ error: 'Error guardando config de tickets' });
+        }
+    });
+
     return router;
 }

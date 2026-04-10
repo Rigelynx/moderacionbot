@@ -1,8 +1,19 @@
+import { handleTicketCreate, handleTicketClose } from '../utils/ticketCore.js';
+
 export default {
     name: 'interactionCreate',
     once: false,
 
     async execute(interaction, client) {
+        if (interaction.isButton()) {
+            if (interaction.customId === 'ticket_create') {
+                return await handleTicketCreate(interaction);
+            }
+            if (interaction.customId === 'ticket_close') {
+                return await handleTicketClose(interaction);
+            }
+        }
+
         if (!interaction.isChatInputCommand()) return;
 
         const command = client.slashCommands.get(interaction.commandName);

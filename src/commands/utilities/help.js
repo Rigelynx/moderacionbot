@@ -11,7 +11,12 @@ export const command = {
             .addFields(
                 { name: '🔨 Moderación', value: `
 \`/ban @usuario [razón]\` - Banear
+\`/softban @usuario [razón]\` - Ban + unban (borra msgs)
+\`/tempban @usuario <tiempo> [razón]\` - Ban temporal
 \`/unban <id> [razón]\` - Desbanear
+\`/untimeban <id> [razón]\` - Quitar ban temporal
+\`/massban <ids> [razón]\` - Banear múltiples
+\`/massunban <ids> [razón]\` - Desbanear múltiples
 \`/kick @usuario [razón]\` - Expulsar
 \`/mute @usuario <cantidad> <unidad>\` - Silenciar
 \`/unmute @usuario\` - Desilenciar
@@ -19,7 +24,11 @@ export const command = {
 \`/unwarn @usuario [número]\` - Quitar advertencia
 \`/warnings [@usuario]\` - Ver advertencias
 \`/clear <cantidad>\` - Eliminar mensajes
-\`/setnick @usuario [apodo]\` - Cambiar apodo`, inline: false },
+\`/setnick @usuario [apodo]\` - Cambiar apodo
+\`/removenick @usuario\` - Quitar apodo`, inline: false },
+                { name: '👋 Bienvenidas / Despedidas', value: `
+\`/welcome\` - Configurar sistema bienvenida
+\`/goodbye\` - Configurar sistema despedida`, inline: false },
                 { name: '👔 Roles', value: `
 \`/role create <nombre> [color]\` - Crear rol
 \`/role delete <rol>\` - Eliminar rol
@@ -32,11 +41,8 @@ export const command = {
 \`/logs disable\` - Desactivar logs
 \`/logs status\` - Ver estado de logs`, inline: false },
                 { name: '🔐 Permisos', value: `
-\`/perm view <canal> <rol> <estado>\` - Ver canal
-\`/perm send <canal> <rol> <estado>\` - Enviar msgs
-\`/perm embed <canal> <rol> <estado>\` - Insertar enlaces
-\`/perm manage <canal> <rol> <estado>\` - Gestionar canal
-\`/perm speak <canal> <rol> <estado>\` - Hablar en voz
+\`/perm <tipo> <canal> <rol> <estado>\`
+*Tipos: view, send, embed, manage, speak, react, attach, mention, history, connect, stream, priority*
 *Estado: allow/deny/reset*`, inline: false },
                 { name: '🔒 Canal', value: `
 \`/lock\` - Bloquear canal
@@ -45,10 +51,24 @@ export const command = {
                 { name: '👤 Info', value: `
 \`/avatar [@usuario]\` - Ver avatar
 \`/userinfo [@usuario]\` - Info de usuario
-\`/serverinfo\` - Info del servidor`, inline: false },
+\`/serverinfo\` - Info del servidor
+\`/roleinfo <rol>\` - Info detallada de rol
+\`/channelinfo [canal]\` - Info de canal`, inline: false },
                 { name: '📊 Utilidades', value: `
+\`/announce <canal> <titulo> <mensaje>\` - Anuncio
+\`/poll <pregunta> <opciones...>\` - Encuesta
+\`/snipe\` - Último msj eliminado
+\`/membercount\` - Conteo de miembros
+\`/register\` - Registrarte en el bot
+\`/unregister\` - Eliminar registro
+\`/profile [@usuario]\` - Ver perfil
+\`/ticket\` - Gestión de tickets
 \`/ping\` - Ver latencia
-\`/help\` - Mostrar ayuda`, inline: false }
+\`/help\` - Mostrar ayuda`, inline: false },
+                { name: '🎮 Diversión', value: `
+\`/8ball <pregunta>\` - Bola mágica
+\`/coinflip\` - Cara o cruz
+\`/rps <elección>\` - Piedra, papel, tijeras`, inline: false }
             )
             .setFooter({ text: 'Usa / para ver los comandos de Discord' })
             .setTimestamp();

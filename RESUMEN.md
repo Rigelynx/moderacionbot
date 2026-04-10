@@ -44,40 +44,65 @@ src/
             └── dashboard.js   # Auth check, CRUD warnings/config
 ```
 
-## Comandos (21 total)
+## Comandos (41 total)
 
-### Moderación (16)
+### Moderación (24)
 | Comando | Descripción | Opciones | Permiso requerido |
 |---------|-------------|----------|-------------------|
 | `/ban` | Banear usuario | usuario, razón | BanMembers |
+| `/softban` | Ban + unban automático | usuario, razón | BanMembers |
+| `/tempban` | Ban temporal | usuario, tiempo, razón | BanMembers |
 | `/unban` | Desbanear usuario | id, razón | BanMembers |
+| `/untimeban` | Quitar ban temporal | id, razón | BanMembers |
+| `/massban` | Banear múltiples | ids, razón | BanMembers |
+| `/massunban` | Desbanear múltiples | ids, razón | BanMembers |
 | `/kick` | Expulsar usuario | usuario, razón | KickMembers |
 | `/mute` | Silenciar usuario | usuario, cantidad, unidad | ModerateMembers |
 | `/unmute` | Quitar silencio | usuario | ModerateMembers |
-| `/warn` | Advertir usuario (5 warns = ban auto) | usuario, razón | ModerateMembers |
-| `/unwarn` | Quitar advertencia | usuario, número (opcional) | ModerateMembers |
+| `/warn` | Advertir usuario (5 = ban) | usuario, razón | ModerateMembers |
+| `/unwarn` | Quitar advertencia | usuario, número | ModerateMembers |
 | `/warnings` | Ver advertencias | usuario (opcional) | ModerateMembers |
-| `/clear` | Eliminar mensajes (1-100) | cantidad | ManageMessages |
+| `/clear` | Eliminar mensajes | cantidad | ManageMessages |
 | `/setnick` | Cambiar apodo | usuario, apodo | ManageNicknames |
-| `/role` | Gestionar roles (subcommands) | create/delete/add/remove/list | ManageRoles |
-| `/logs` | Gestionar logs (subcommands) | set/disable/enable/status | ManageGuild |
-| `/perm` | Configurar permisos | view/send/embed/manage/speak | ManageChannels |
+| `/removenick` | Quitar apodo | usuario | ManageNicknames |
+| `/role` | Gestionar roles | create/delete/add/rmv/list | ManageRoles |
+| `/logs` | Gestionar logs | set/disable/enable/status | ManageGuild |
+| `/welcome` | Sistema bienvenida | enable/channel/message/bg | ManageGuild |
+| `/goodbye` | Sistema despedida | enable/channel/message/bg | ManageGuild |
+| `/perm` | Permisos (12 subs) | view/send/embed/manage... | ManageChannels |
 | `/lock` | Bloquear canal | - | ManageChannels |
 | `/unlock` | Desbloquear canal | - | ManageChannels |
-| `/slowmode` | Modo lento (0-21600s) | segundos | ManageChannels |
+| `/slowmode` | Modo lento (0-21600s)| segundos | ManageChannels |
 
-### Info (3)
+### Info (5)
 | Comando | Descripción |
 |---------|-------------|
 | `/avatar` | Ver avatar de usuario |
 | `/userinfo` | Info detallada de usuario |
 | `/serverinfo` | Info del servidor |
+| `/roleinfo` | Info detallada de rol |
+| `/channelinfo` | Info de canal |
 
-### Utilidades (2)
+### Utilidades (9)
 | Comando | Descripción |
 |---------|-------------|
+| `/announce` | Enviar un anuncio |
+| `/poll` | Crear encuesta con reacciones |
+| `/snipe` | Último mensaje eliminado |
+| `/membercount`| Conteo detallado de miembros |
+| `/register` | Registrarse en el bot |
+| `/unregister` | Eliminar registro |
+| `/profile` | Ver perfil del registro |
+| `/ticket`  | Gestión de tickets |
 | `/ping` | Ver latencia |
 | `/help` | Mostrar todos los comandos |
+
+### Diversión (3)
+| Comando | Descripción |
+|---------|-------------|
+| `/8ball` | Bola mágica 8 |
+| `/coinflip` | Lanzar moneda |
+| `/rps` | Piedra, papel, tijeras |
 
 ## Panel Web (Dashboard)
 
@@ -106,6 +131,8 @@ src/
 | `/api/guilds/:id/warnings/:userId/:index` | DELETE | Admin | Eliminar advertencia |
 | `/api/guilds/:id/config` | GET | Admin | Configuración del servidor |
 | `/api/guilds/:id/config` | POST | Admin | Actualizar configuración |
+| `/api/guilds/:id/users` | GET | Admin | Obtener usuarios registrados |
+| `/api/guilds/:id/users/:userId` | DELETE | Admin | Eliminar usuario registrado |
 
 ### Autenticación OAuth2
 - `/auth/login` — Redirige a Discord para autorizar
@@ -128,7 +155,31 @@ src/
 - Cada advertencia guarda: razón, moderador, fecha
 - Gestionable desde Dashboard web o comandos slash
 
-## Configuración (por servidor)
+## Sistemas Adicionales
+
+### Welcome & Goodbye (Generación Canvas)
+- Configuración independiente por comandos `/welcome` y `/goodbye`
+- Usa la librería `@napi-rs/canvas` para crear imágenes premium personalizadas
+- Soporta configuración de canal, fondo y variables dinámicas en el mensaje (`{user}`, `{count}`, `{server}`)
+
+### Registro de Usuarios (Persistent)
+- Los usuarios se registran vía el comando `/register`
+- La data se guarda en `data/users.json`
+- Gestionable desde la Web y eliminables vía dashboard
+
+### Sistema de Bans Temporales
+- Archivo de persistencia en `data/tempbans.json`
+- Bucle (Interval) que revisa cada minuto los expirados
+- Desbanea automáticamente y emite logs
+
+### Sistema de Tickets Empresarial (Configurable)
+- Los tickets son generados por interacción de botones con UI nativa de Discord (`/ticket setup`).
+- Aislamiento de permisos: Oculta el canal a `@everyone` y lo revela al autor y a un rol Staff designado.
+- Uso de `discord-html-transcripts` para auto-construir transcripciones `.html` interactivas en el servidor y mandarlas antes de su cierre.
+- Integración en Dashboard para seleccionar dinámicamente un rol Staff y la ID de la Categoría de despliegue.
+
+### Snipe (Mensajes Borrados)
+- Almacenamiento auto-limpiable (5 minutos en memoria, no en disco) para cada canal.
 ```json
 {
   "guilds": {
@@ -176,7 +227,9 @@ src/
 ## Dependencias
 ```json
 {
+  "@napi-rs/canvas": "^0.1.53",
   "cookie-parser": "^1.4.7",
+  "discord-html-transcripts": "^3.2.0",
   "discord.js": "^14.14.1",
   "dotenv": "^16.4.5",
   "express": "^4.21.2",

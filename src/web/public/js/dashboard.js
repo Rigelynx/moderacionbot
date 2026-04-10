@@ -115,6 +115,7 @@ function initNavigation() {
             if (view === 'overview') loadOverview();
             if (view === 'warnings') loadWarnings();
             if (view === 'config') loadConfig();
+            if (view === 'users') loadUsers();
         });
     });
 }
@@ -276,6 +277,89 @@ function confirmDeleteWarning(userId, index) {
     cancel.addEventListener('click', onCancel);
 }
 
+// ── Users ──
+async function loadUsers() {
+    if (!currentGuildId) return;
+
+    const tbody = document.getElementById('usersBody');
+    tbody.innerHTML = '<tr><td colspan="4" class="table-empty">Cargando usuarios...</td></tr>';
+
+    try {
+        const res = await fetch(`/api/guilds/${currentGuildId}/users`);
+        const users = await res.json();
+
+        if (!Array.isArray(users) || users.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="table-empty">No hay usuarios registrados</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = users.map(u => `
+            <tr>
+                <td>
+                    <div class="table-user">
+                        ${u.avatar ? `<img src="${u.avatar}" class="table-avatar" alt="">` : ''}
+                        <span class="table-username">${escapeHtml(u.username)}</span>
+                    </div>
+                </td>
+                <td><span class="user-tag" style="padding: 2px 6px;">${u.id}</span></td>
+                <td>${formatDate(u.registeredAt)}</td>
+                <td>
+                    <button class="btn-icon" onclick="confirmDeleteUser('${u.id}')" title="Eliminar registro">
+                        🗑️
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+
+    } catch (err) {
+        tbody.innerHTML = '<tr><td colspan="4" class="table-empty">Error cargando usuarios</td></tr>';
+    }
+}
+
+// ── Delete User ──
+function confirmDeleteUser(userId) {
+    const modal = document.getElementById('confirmModal');
+    const confirm = document.getElementById('modalConfirm');
+    const cancel = document.getElementById('modalCancel');
+
+    document.getElementById('modalTitle').textContent = '¿Eliminar registro?';
+    document.getElementById('modalDesc').textContent = 'Esta acción eliminará al usuario de la base de datos del bot.';
+    
+    modal.style.display = 'flex';
+
+    const onConfirm = async () => {
+        modal.style.display = 'none';
+        cleanup();
+
+        try {
+            const res = await fetch(`/api/guilds/${currentGuildId}/users/${userId}`, {
+                method: 'DELETE'
+            });
+
+            if (res.ok) {
+                loadUsers();
+            }
+        } catch (err) {
+            console.error('Error deleting user:', err);
+        }
+    };
+
+    const onCancel = () => {
+        modal.style.display = 'none';
+        cleanup();
+    };
+
+    function cleanup() {
+        confirm.removeEventListener('click', onConfirm);
+        cancel.removeEventListener('click', onCancel);
+        document.getElementById('modalTitle').textContent = '¿Estás seguro?';
+        document.getElementById('modalDesc').textContent = 'Esta acción no se puede deshacer.';
+    }
+
+    confirm.addEventListener('click', onConfirm);
+    cancel.addEventListener('click', onCancel);
+}
+
 // ── Config ──
 async function loadConfig() {
     if (!currentGuildId) return;
@@ -286,12 +370,23 @@ async function loadConfig() {
 
         document.getElementById('configLogsEnabled').checked = config.logsEnabled;
         document.getElementById('configLogChannel').value = config.logChannel;
+
+        // Load Tickets config
+        const tRes = await fetch(`/api/guilds/${currentGuildId}/tickets/config`);
+        if (tRes.ok) {
+            const tConfig = await tRes.json();
+            document.getElementById('configTicketsEnabled').checked = tConfig.enabled || false;
+            document.getElementById('configTicketsCategory').value = tConfig.categoryId || '';
+            document.getElementById('configTicketsRole').value = tConfig.roleId || '';
+        }
+
     } catch (err) {
         console.error('Error loading config:', err);
     }
 
     // Save handler
     document.getElementById('saveConfigBtn').onclick = saveConfig;
+    document.getElementById('saveTicketsBtn').onclick = saveTicketsConfig;
 }
 
 async function saveConfig() {
@@ -315,6 +410,38 @@ async function saveConfig() {
             document.getElementById('quickLogStatus').textContent = logsEnabled ? 'Activados' : 'Desactivados';
             document.getElementById('quickLogChannel').textContent = '#' + logChannel;
             document.getElementById('quickLogsCheckbox').checked = logsEnabled;
+        } else {
+            saveStatus.textContent = '❌ Error al guardar';
+        }
+    } catch {
+        saveStatus.textContent = '❌ Error de conexión';
+    }
+
+    setTimeout(() => {
+        saveStatus.classList.remove('visible');
+    }, 3000);
+}
+
+async function saveTicketsConfig() {
+    if (!currentGuildId) return;
+
+    const enabled = document.getElementById('configTicketsEnabled').checked;
+    const categoryId = document.getElementById('configTicketsCategory').value.trim();
+    const roleId = document.getElementById('configTicketsRole').value.trim();
+
+    const saveStatus = document.getElementById('saveTicketsStatus');
+    saveStatus.textContent = 'Guardando tickets...';
+    saveStatus.classList.add('visible');
+
+    try {
+        const res = await fetch(`/api/guilds/${currentGuildId}/tickets/config`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ enabled, categoryId, roleId })
+        });
+
+        if (res.ok) {
+            saveStatus.textContent = '✅ Tickets actualizados';
         } else {
             saveStatus.textContent = '❌ Error al guardar';
         }

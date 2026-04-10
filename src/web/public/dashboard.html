@@ -82,6 +82,10 @@
                         <span class="nav-icon">⚠️</span>
                         <span>Advertencias</span>
                     </button>
+                    <button class="nav-item" data-view="users" id="navUsers">
+                        <span class="nav-icon">👥</span>
+                        <span>Usuarios</span>
+                    </button>
                     <button class="nav-item" data-view="config" id="navConfig">
                         <span class="nav-icon">⚙️</span>
                         <span>Configuración</span>
@@ -199,6 +203,33 @@
                 </div>
             </div>
 
+            <!-- Users View -->
+            <div class="view" id="view-users" style="display: none;">
+                <div class="view-header">
+                    <h1 class="view-title">👥 Usuarios Registrados</h1>
+                    <p class="view-subtitle">Gestiona los usuarios que se han registrado en el bot en este servidor</p>
+                </div>
+                <div class="card">
+                    <div class="table-container">
+                        <table class="data-table" id="usersTable">
+                            <thead>
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>ID</th>
+                                    <th>Registrado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersBody">
+                                <tr>
+                                    <td colspan="4" class="table-empty">Cargando usuarios...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <!-- Config View -->
             <div class="view" id="view-config" style="display: none;">
                 <div class="view-header">
@@ -233,6 +264,48 @@
                                 💾 Guardar cambios
                             </button>
                             <span class="save-status" id="saveStatus"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 20px;">
+                    <h3 class="card-title">Sistema de Tickets</h3>
+                    <div class="config-form">
+                        <div class="config-item">
+                            <div class="config-info">
+                                <span class="config-label">Activar Tickets</span>
+                                <span class="config-desc">Permite a los usuarios crear canales privados de soporte</span>
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" id="configTicketsEnabled">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="config-item">
+                            <div class="config-info">
+                                <span class="config-label">ID Categoría</span>
+                                <span class="config-desc">ID de la categoría de Discord donde se crearán los tickets</span>
+                            </div>
+                            <div class="input-group">
+                                <span class="input-prefix">📁</span>
+                                <input type="text" id="configTicketsCategory" class="config-input" placeholder="Ej: 123456789...">
+                            </div>
+                        </div>
+                        <div class="config-item">
+                            <div class="config-info">
+                                <span class="config-label">ID Rol Soporte</span>
+                                <span class="config-desc">ID del rol de Staff autorizado a leer los tickets (opcional)</span>
+                            </div>
+                            <div class="input-group">
+                                <span class="input-prefix">@</span>
+                                <input type="text" id="configTicketsRole" class="config-input" placeholder="Ej: 123456789...">
+                            </div>
+                        </div>
+                        <div class="config-actions">
+                            <button class="btn btn-primary" id="saveTicketsBtn">
+                                💾 Guardar configuración de tickets
+                            </button>
+                            <span class="save-status" id="saveTicketsStatus"></span>
                         </div>
                     </div>
                 </div>
