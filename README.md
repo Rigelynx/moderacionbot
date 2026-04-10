@@ -1,6 +1,6 @@
 # ModBot - Discord Moderation Bot
 
-![ModBot Cover](https://via.placeholder.com/1200x400/0a0a1a/5865f2?text=ModBot+-+Advanced+Discord+Moderation)
+![ModBot Cover]([https://via.placeholder.com/1200x400/0a0a1a/5865f2?text=ModBot+-+Advanced+Discord+Moderation](https://cdn.discordapp.com/avatars/1491566928945352735/2220bf566d67fe58dcc665d04902ae6c.webp?size=1024))
 
 ModBot es un bot de moderación robusto y avanzado para Discord con un panel de control en la web (Dashboard) integrado. Construido con `discord.js` y `express`.
 
