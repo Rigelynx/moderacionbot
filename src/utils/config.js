@@ -6,18 +6,32 @@ import { logInfo, logSuccess, logWarning } from './logger.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const configFile = join(__dirname, '..', 'data', 'config.json');
 
-let config = {
-    logs: {
-        enabled: true,
-        channelName: 'logs-moderacion'
+let config = { guilds: {} };
+
+function getGuildConfig(guildId) {
+    if (!config.guilds[guildId]) {
+        config.guilds[guildId] = {
+            logs: {
+                enabled: true,
+                channelName: 'logs-moderacion'
+            }
+        };
     }
-};
+    return config.guilds[guildId];
+}
 
 export function loadConfig() {
     try {
         if (existsSync(configFile)) {
             const data = readFileSync(configFile, 'utf-8');
-            config = JSON.parse(data);
+            const parsed = JSON.parse(data);
+            // Migrar formato antiguo (sin guilds) al nuevo
+            if (parsed.guilds) {
+                config = parsed;
+            } else {
+                config = { guilds: {} };
+                logInfo('Configuración migrada al formato por servidor');
+            }
             logSuccess('Configuración cargada');
         } else {
             saveConfig();
@@ -43,22 +57,24 @@ export function saveConfig() {
 }
 
 export function getLogChannelName(guildId) {
-    return config.logs?.channelName || 'logs-moderacion';
+    return getGuildConfig(guildId).logs?.channelName || 'logs-moderacion';
 }
 
 export function isLogsEnabled(guildId) {
-    return config.logs?.enabled !== false;
+    return getGuildConfig(guildId).logs?.enabled !== false;
 }
 
 export function setLogChannel(guildId, channelName) {
-    if (!config.logs) config.logs = {};
-    config.logs.channelName = channelName;
+    const gc = getGuildConfig(guildId);
+    if (!gc.logs) gc.logs = {};
+    gc.logs.channelName = channelName;
     saveConfig();
 }
 
 export function setLogsEnabled(guildId, enabled) {
-    if (!config.logs) config.logs = {};
-    config.logs.enabled = enabled;
+    const gc = getGuildConfig(guildId);
+    if (!gc.logs) gc.logs = {};
+    gc.logs.enabled = enabled;
     saveConfig();
 }
 

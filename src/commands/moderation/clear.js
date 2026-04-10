@@ -4,6 +4,7 @@ import { sendLog } from '../../utils/embeds.js';
 export const command = {
     name: 'clear',
     description: 'Eliminar mensajes del canal',
+    default_member_permissions: '8192',
     options: [
         {
             name: 'cantidad',
@@ -16,20 +17,20 @@ export const command = {
     ],
     async execute(interaction, client) {
         const amount = interaction.options.getInteger('cantidad');
-        
+
         const messages = await interaction.channel.messages.fetch({ limit: amount });
-        
+
         const twoWeeks = 14 * 24 * 60 * 60 * 1000;
-        const deletableMessages = messages.filter(msg => 
+        const deletableMessages = messages.filter(msg =>
             Date.now() - msg.createdTimestamp < twoWeeks
         );
-        
+
         const notDeletable = messages.size - deletableMessages.size;
-        
+
         if (deletableMessages.size > 0) {
             await interaction.channel.bulkDelete(deletableMessages);
         }
-        
+
         const embed = new EmbedBuilder()
             .setColor(0x00ff00)
             .setTitle('🗑️ Mensajes Eliminados')
@@ -37,11 +38,11 @@ export const command = {
                 { name: 'Borrados', value: `${deletableMessages.size}`, inline: true },
                 { name: 'No borrados (+14 días)', value: `${notDeletable}`, inline: true },
                 { name: 'Canal', value: interaction.channel.name, inline: true },
-                { name: 'Moderador', value: interaction.user.tag, inline: true }
+                { name: 'Moderador', value: interaction.user.username, inline: true }
             )
             .setTimestamp();
-        
-        await interaction.reply({ embeds: [embed] });
+
+        await interaction.reply({ embeds: [embed], flags: 64 });
         await sendLog(interaction.guild, { embeds: [embed] }, client);
     }
 };

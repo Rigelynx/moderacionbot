@@ -1,9 +1,10 @@
-import { EmbedBuilder, Role } from 'discord.js';
+import { EmbedBuilder } from 'discord.js';
 import { sendLog } from '../../utils/embeds.js';
 
 export const command = {
     name: 'role',
     description: 'Gestionar roles del servidor',
+    default_member_permissions: '268435456',
     options: [
         {
             name: 'create',
@@ -83,7 +84,7 @@ export const command = {
     ],
     async execute(interaction, client) {
         const subcommand = interaction.options.getSubcommand();
-        
+
         switch (subcommand) {
             case 'create':
                 await this.createRole(interaction, client);
@@ -102,11 +103,11 @@ export const command = {
                 break;
         }
     },
-    
+
     async createRole(interaction, client) {
         const name = interaction.options.getString('nombre');
         const colorInput = interaction.options.getString('color');
-        
+
         let color = 0x5865f2;
         if (colorInput) {
             if (colorInput.startsWith('#')) {
@@ -120,13 +121,13 @@ export const command = {
                 color = colorMap[colorInput.toLowerCase()] || 0x5865f2;
             }
         }
-        
+
         try {
             const role = await interaction.guild.roles.create({
                 name: name,
                 color: color
             });
-            
+
             const embed = new EmbedBuilder()
                 .setColor(color)
                 .setTitle('✅ Rol Creado')
@@ -134,121 +135,126 @@ export const command = {
                     { name: 'Nombre', value: role.name, inline: true },
                     { name: 'Color', value: colorInput || 'Por defecto', inline: true },
                     { name: 'Posición', value: `${role.position}`, inline: true },
-                    { name: 'Moderador', value: interaction.user.tag, inline: true }
+                    { name: 'Moderador', value: interaction.user.username, inline: true }
                 )
                 .setTimestamp();
-            
+
             await interaction.reply({ embeds: [embed] });
             await sendLog(interaction.guild, { embeds: [embed] }, client);
         } catch (error) {
             await interaction.reply({ content: `❌ Error al crear el rol: ${error.message}`, flags: 64 });
         }
     },
-    
+
     async deleteRole(interaction, client) {
         const role = interaction.options.getRole('rol');
-        
+
         if (role.comparePositionTo(interaction.guild.members.me.roles.highest) >= 0) {
             return interaction.reply({ content: '❌ No puedo eliminar este rol (está por encima del mío).', flags: 64 });
         }
-        
+
         try {
             const roleName = role.name;
             await role.delete();
-            
+
             const embed = new EmbedBuilder()
                 .setColor(0xff0000)
                 .setTitle('🗑️ Rol Eliminado')
                 .addFields(
                     { name: 'Nombre', value: roleName },
-                    { name: 'Moderador', value: interaction.user.tag }
+                    { name: 'Moderador', value: interaction.user.username }
                 )
                 .setTimestamp();
-            
+
             await interaction.reply({ embeds: [embed] });
             await sendLog(interaction.guild, { embeds: [embed] }, client);
         } catch (error) {
             await interaction.reply({ content: `❌ Error al eliminar el rol: ${error.message}`, flags: 64 });
         }
     },
-    
+
     async addRole(interaction, client) {
         const user = interaction.options.getMember('usuario');
         const role = interaction.options.getRole('rol');
-        
+
         if (!user) {
             return interaction.reply({ content: '❌ Usuario no encontrado.', flags: 64 });
         }
-        
+
         if (user.roles.cache.has(role.id)) {
-            return interaction.reply({ content: `❌ ${user.user.tag} ya tiene el rol ${role.name}.`, flags: 64 });
+            return interaction.reply({ content: `❌ ${user.user.username} ya tiene el rol ${role.name}.`, flags: 64 });
         }
-        
+
         try {
             await user.roles.add(role);
-            
+
             const embed = new EmbedBuilder()
                 .setColor(0x00ff00)
                 .setTitle('✅ Rol Añadido')
                 .addFields(
-                    { name: 'Usuario', value: user.user.tag, inline: true },
+                    { name: 'Usuario', value: user.user.username, inline: true },
                     { name: 'Rol', value: role.name, inline: true },
-                    { name: 'Moderador', value: interaction.user.tag, inline: true }
+                    { name: 'Moderador', value: interaction.user.username, inline: true }
                 )
                 .setTimestamp();
-            
+
             await interaction.reply({ embeds: [embed] });
             await sendLog(interaction.guild, { embeds: [embed] }, client);
         } catch (error) {
             await interaction.reply({ content: `❌ Error al añadir el rol: ${error.message}`, flags: 64 });
         }
     },
-    
+
     async removeRole(interaction, client) {
         const user = interaction.options.getMember('usuario');
         const role = interaction.options.getRole('rol');
-        
+
         if (!user) {
             return interaction.reply({ content: '❌ Usuario no encontrado.', flags: 64 });
         }
-        
+
         if (!user.roles.cache.has(role.id)) {
-            return interaction.reply({ content: `❌ ${user.user.tag} no tiene el rol ${role.name}.`, flags: 64 });
+            return interaction.reply({ content: `❌ ${user.user.username} no tiene el rol ${role.name}.`, flags: 64 });
         }
-        
+
         try {
             await user.roles.remove(role);
-            
+
             const embed = new EmbedBuilder()
                 .setColor(0xffa500)
                 .setTitle('➖ Rol Quitado')
                 .addFields(
-                    { name: 'Usuario', value: user.user.tag, inline: true },
+                    { name: 'Usuario', value: user.user.username, inline: true },
                     { name: 'Rol', value: role.name, inline: true },
-                    { name: 'Moderador', value: interaction.user.tag, inline: true }
+                    { name: 'Moderador', value: interaction.user.username, inline: true }
                 )
                 .setTimestamp();
-            
+
             await interaction.reply({ embeds: [embed] });
             await sendLog(interaction.guild, { embeds: [embed] }, client);
         } catch (error) {
             await interaction.reply({ content: `❌ Error al quitar el rol: ${error.message}`, flags: 64 });
         }
     },
-    
+
     async listRoles(interaction) {
         const roles = interaction.guild.roles.cache
             .filter(r => r.name !== '@everyone')
             .sort((a, b) => b.position - a.position);
-        
+
         const roleList = roles.map(r => `${r} - ${r.members.size} miembros`).join('\n');
-        
+
+        // Truncar si excede el límite de descripción de Discord (4096 chars)
+        const description = roleList.length > 4000
+            ? roleList.slice(0, 4000) + '\n... y más roles'
+            : roleList || 'No hay roles personalizados';
+
         const embed = new EmbedBuilder()
             .setColor(0x5865f2)
             .setTitle(`📋 Roles del Servidor (${roles.size})`)
-            .setDescription(roleList || 'No hay roles personalizados')
+            .setDescription(description)
             .setTimestamp();
-        
+
         await interaction.reply({ embeds: [embed] });
     }
 };

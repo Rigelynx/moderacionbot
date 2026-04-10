@@ -1,9 +1,10 @@
-import { EmbedBuilder, ChannelType, PermissionsBitField } from 'discord.js';
+import { EmbedBuilder } from 'discord.js';
 import { sendLog } from '../../utils/embeds.js';
 
 export const command = {
     name: 'perm',
     description: 'Configurar permisos de canal',
+    default_member_permissions: '16',
     options: [
         {
             name: 'view',
@@ -81,11 +82,7 @@ export const command = {
         const channel = interaction.options.getChannel('canal');
         const role = interaction.options.getRole('rol');
         const estado = interaction.options.getString('estado');
-        
-        if (!channel.isTextBased() && !channel.isVoiceBased() && subcommand !== 'speak') {
-            return interaction.reply({ content: '❌ Este comando solo funciona en canales de texto o voz.', flags: 64 });
-        }
-        
+
         const permissionMap = {
             view: 'ViewChannel',
             send: 'SendMessages',
@@ -93,10 +90,10 @@ export const command = {
             manage: 'ManageChannels',
             speak: 'Speak'
         };
-        
+
         const permission = permissionMap[subcommand];
         let value = null;
-        
+
         switch (estado) {
             case 'allow':
                 value = true;
@@ -108,15 +105,15 @@ export const command = {
                 value = null;
                 break;
         }
-        
+
         try {
             await channel.permissionOverwrites.edit(role, {
                 [permission]: value
             });
-            
+
             const estadoEmoji = estado === 'allow' ? '✅' : estado === 'deny' ? '❌' : '🔄';
             const estadoTexto = estado === 'allow' ? 'Permitido' : estado === 'deny' ? 'Denegado' : 'Reseteado';
-            
+
             const embed = new EmbedBuilder()
                 .setColor(estado === 'allow' ? 0x00ff00 : estado === 'deny' ? 0xff0000 : 0x808080)
                 .setTitle(`${estadoEmoji} Permiso Actualizado`)
@@ -125,10 +122,10 @@ export const command = {
                     { name: 'Rol', value: role.name, inline: true },
                     { name: 'Permiso', value: permission, inline: true },
                     { name: 'Estado', value: estadoTexto, inline: true },
-                    { name: 'Moderador', value: interaction.user.tag, inline: true }
+                    { name: 'Moderador', value: interaction.user.username, inline: true }
                 )
                 .setTimestamp();
-            
+
             await interaction.reply({ embeds: [embed] });
             await sendLog(interaction.guild, { embeds: [embed] }, client);
         } catch (error) {

@@ -11,13 +11,14 @@ export const command = {
             .addFields(
                 { name: '🔨 Moderación', value: `
 \`/ban @usuario [razón]\` - Banear
-\`/unban @usuario [razón]\` - Desbanear
+\`/unban <id> [razón]\` - Desbanear
 \`/kick @usuario [razón]\` - Expulsar
-\`/mute @usuario <cantidad> <unidad>\` - Silenciar (seg/min/horas/días)
+\`/mute @usuario <cantidad> <unidad>\` - Silenciar
 \`/unmute @usuario\` - Desilenciar
 \`/warn @usuario [razón]\` - Advertir
+\`/unwarn @usuario [número]\` - Quitar advertencia
 \`/warnings [@usuario]\` - Ver advertencias
-\`/clear [cantidad]\` - Eliminar mensajes
+\`/clear <cantidad>\` - Eliminar mensajes
 \`/setnick @usuario [apodo]\` - Cambiar apodo`, inline: false },
                 { name: '👔 Roles', value: `
 \`/role create <nombre> [color]\` - Crear rol
@@ -40,7 +41,7 @@ export const command = {
                 { name: '🔒 Canal', value: `
 \`/lock\` - Bloquear canal
 \`/unlock\` - Desbloquear canal
-\`/slowmode [segundos]\` - Modo lento`, inline: false },
+\`/slowmode <segundos>\` - Modo lento`, inline: false },
                 { name: '👤 Info', value: `
 \`/avatar [@usuario]\` - Ver avatar
 \`/userinfo [@usuario]\` - Info de usuario
@@ -51,7 +52,7 @@ export const command = {
             )
             .setFooter({ text: 'Usa / para ver los comandos de Discord' })
             .setTimestamp();
-        
+
         await interaction.reply({ embeds: [embed] });
     }
 };

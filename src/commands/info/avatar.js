@@ -13,16 +13,16 @@ export const command = {
     ],
     async execute(interaction, client) {
         const user = interaction.options.getUser('usuario') || interaction.user;
-        
+
         const embed = new EmbedBuilder()
             .setColor(0x5865f2)
             .setTitle(`🖼️ Avatar de ${user.username}`)
-            .setImage(user.displayAvatarURL({ size: 1024, dynamic: true }))
+            .setImage(user.displayAvatarURL({ size: 1024 }))
             .addFields(
-                { name: 'Usuario', value: user.tag },
+                { name: 'Usuario', value: user.username },
                 { name: 'URL', value: `[Click aquí](${user.displayAvatarURL({ size: 1024 })})` }
             );
-        
+
         await interaction.reply({ embeds: [embed] });
     }
 };

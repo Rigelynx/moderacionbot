@@ -3,6 +3,7 @@ import { sendLog, createModerationEmbed } from '../../utils/embeds.js';
 export const command = {
     name: 'kick',
     description: 'Expulsar a un usuario del servidor',
+    default_member_permissions: '2',
     options: [
         {
             name: 'usuario',
@@ -20,15 +21,23 @@ export const command = {
     async execute(interaction, client) {
         const user = interaction.options.getMember('usuario');
         const reason = interaction.options.getString('razon') || 'No especificada';
-        
+
         if (!user) {
-            return interaction.reply('❌ Usuario no encontrado.');
+            return interaction.reply({ content: '❌ Usuario no encontrado.', flags: 64 });
         }
-        
+
+        if (user.id === interaction.user.id) {
+            return interaction.reply({ content: '❌ No puedes expulsarte a ti mismo.', flags: 64 });
+        }
+
+        if (user.id === client.user.id) {
+            return interaction.reply({ content: '❌ No puedo expulsarme a mí mismo.', flags: 64 });
+        }
+
         if (!user.kickable) {
-            return interaction.reply('❌ No puedo expulsar a este usuario.');
+            return interaction.reply({ content: '❌ No puedo expulsar a este usuario. Puede tener un rol superior al mío.', flags: 64 });
         }
-        
+
         const embed = createModerationEmbed({
             color: 0xffa500,
             title: '👢 Usuario Expulsado',
@@ -36,7 +45,7 @@ export const command = {
             moderator: interaction.user,
             fields: [{ name: 'Razón', value: reason }]
         });
-        
+
         await user.kick(reason);
         await interaction.reply({ embeds: [embed] });
         await sendLog(interaction.guild, { embeds: [embed] }, client);

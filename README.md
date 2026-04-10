@@ -32,6 +32,7 @@ discord-moderation-bot/
 | Comando | Descripción |
 |---------|-------------|
 | `/ban @usuario [razón]` | Banear a un usuario del servidor |
+| `/unban @usuario` | Desbanear un usuario |
 | `/kick @usuario [razón]` | Expulsar a un usuario |
 | `/mute @usuario cantidad unidad` | Silenciar usuario (seg/min/horas/días) |
 | `/unmute @usuario` | Quitar silencio a un usuario |

@@ -15,13 +15,13 @@ export const command = {
     async execute(interaction, client) {
         const user = interaction.options.getMember('usuario') || interaction.member;
         const member = await interaction.guild.members.fetch(user.id);
-        
+
         const embed = new EmbedBuilder()
             .setColor(user.displayHexColor || 0x5865f2)
-            .setTitle(`${getStatusEmoji(user.user.presence?.status)} Información de ${user.user.username}`)
-            .setThumbnail(user.user.displayAvatarURL({ size: 1024, dynamic: true }))
+            .setTitle(`${getStatusEmoji(user.presence?.status)} Información de ${user.user.username}`)
+            .setThumbnail(user.user.displayAvatarURL({ size: 1024 }))
             .addFields(
-                { name: 'Nombre', value: user.user.tag, inline: true },
+                { name: 'Nombre', value: user.user.username, inline: true },
                 { name: 'ID', value: user.id, inline: true },
                 { name: 'Apodo', value: user.nickname || 'Ninguno', inline: true },
                 { name: 'Rol más alto', value: user.roles.highest.name, inline: true },
@@ -30,7 +30,7 @@ export const command = {
                 { name: 'Roles', value: user.roles.cache.filter(r => r.name !== '@everyone').map(r => r.name).join(', ') || 'Ninguno' }
             )
             .setTimestamp();
-        
+
         await interaction.reply({ embeds: [embed] });
     }
 };

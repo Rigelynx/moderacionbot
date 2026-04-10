@@ -1,9 +1,10 @@
 import { EmbedBuilder } from 'discord.js';
-import { isLogsEnabled, getLogChannelName, setLogChannel, setLogsEnabled, getConfig } from '../../utils/config.js';
+import { isLogsEnabled, getLogChannelName, setLogChannel, setLogsEnabled } from '../../utils/config.js';
 
 export const command = {
     name: 'logs',
     description: 'Gestionar el sistema de logs',
+    default_member_permissions: '32',
     options: [
         {
             name: 'set',
@@ -36,7 +37,7 @@ export const command = {
     ],
     async execute(interaction, client) {
         const subcommand = interaction.options.getSubcommand();
-        
+
         switch (subcommand) {
             case 'set':
                 await this.setChannel(interaction, client);
@@ -52,16 +53,16 @@ export const command = {
                 break;
         }
     },
-    
+
     async setChannel(interaction, client) {
         const canal = interaction.options.getChannel('canal');
-        
+
         if (!canal.isTextBased()) {
             return interaction.reply({ content: '❌ Selecciona un canal de texto.', flags: 64 });
         }
-        
+
         setLogChannel(interaction.guild.id, canal.name);
-        
+
         const embed = new EmbedBuilder()
             .setColor(0x00ff00)
             .setTitle('✅ Canal de Logs Actualizado')
@@ -70,39 +71,39 @@ export const command = {
                 { name: 'Estado', value: 'Activado', inline: true }
             )
             .setTimestamp();
-        
+
         await interaction.reply({ embeds: [embed] });
     },
-    
+
     async disableLogs(interaction) {
         setLogsEnabled(interaction.guild.id, false);
-        
+
         const embed = new EmbedBuilder()
             .setColor(0xffa500)
             .setTitle('🔕 Logs Desactivados')
             .setDescription('Los comandos de moderación ya no enviarán mensajes al canal de logs.')
             .setTimestamp();
-        
+
         await interaction.reply({ embeds: [embed] });
     },
-    
+
     async enableLogs(interaction) {
         setLogsEnabled(interaction.guild.id, true);
-        
+
         const embed = new EmbedBuilder()
             .setColor(0x00ff00)
             .setTitle('🔔 Logs Activados')
             .setDescription(`Los logs se enviarán a #${getLogChannelName(interaction.guild.id)}`)
             .setTimestamp();
-        
+
         await interaction.reply({ embeds: [embed] });
     },
-    
+
     async status(interaction) {
         const enabled = isLogsEnabled(interaction.guild.id);
         const channelName = getLogChannelName(interaction.guild.id);
         const channel = interaction.guild.channels.cache.find(c => c.name === channelName);
-        
+
         const embed = new EmbedBuilder()
             .setColor(0x5865f2)
             .setTitle('📋 Estado de Logs')
@@ -112,7 +113,7 @@ export const command = {
                 { name: 'Canal configurado', value: channelName, inline: false }
             )
             .setTimestamp();
-        
+
         await interaction.reply({ embeds: [embed] });
     }
 };

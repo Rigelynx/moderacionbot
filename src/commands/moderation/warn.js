@@ -1,8 +1,10 @@
 import { sendLog, createModerationEmbed } from '../../utils/embeds.js';
+import { addWarning, getWarningCount } from '../../utils/warnings.js';
 
 export const command = {
     name: 'warn',
     description: 'Advertir a un usuario',
+    default_member_permissions: '1099511627776',
     options: [
         {
             name: 'usuario',
@@ -20,15 +22,22 @@ export const command = {
     async execute(interaction, client) {
         const user = interaction.options.getMember('usuario');
         const reason = interaction.options.getString('razon') || 'No especificada';
-        
+
         if (!user) {
-            return interaction.reply('❌ Usuario no encontrado.');
+            return interaction.reply({ content: '❌ Usuario no encontrado.', flags: 64 });
         }
-        
-        const warns = client.warningCounts.get(user.id) || 0;
-        const newCount = warns + 1;
-        client.warningCounts.set(user.id, newCount);
-        
+
+        if (user.id === interaction.user.id) {
+            return interaction.reply({ content: '❌ No puedes advertirte a ti mismo.', flags: 64 });
+        }
+
+        if (user.user.bot) {
+            return interaction.reply({ content: '❌ No puedes advertir a un bot.', flags: 64 });
+        }
+
+        const guildId = interaction.guild.id;
+        const newCount = addWarning(guildId, user.id, reason, interaction.user.username);
+
         const embed = createModerationEmbed({
             color: 0xffff00,
             title: '⚠️ Advertencia',
@@ -39,14 +48,21 @@ export const command = {
                 { name: 'Total', value: `${newCount}/5` }
             ]
         });
-        
+
         await interaction.reply({ embeds: [embed] });
         await sendLog(interaction.guild, { embeds: [embed] }, client);
-        
+
         if (newCount >= 5) {
-            await user.ban({ reason: '5 advertencias acumuladas' });
-            client.warningCounts.delete(user.id);
-            await interaction.channel.send(`🔨 ${user.user.tag} ha sido baneado por acumular 5 advertencias.`);
+            if (user.bannable) {
+                try {
+                    await user.ban({ reason: '5 advertencias acumuladas' });
+                    await interaction.channel.send(`🔨 **${user.user.username}** ha sido baneado por acumular 5 advertencias.`);
+                } catch (error) {
+                    await interaction.channel.send(`⚠️ No se pudo banear automáticamente a **${user.user.username}**: ${error.message}`);
+                }
+            } else {
+                await interaction.channel.send(`⚠️ **${user.user.username}** tiene 5 advertencias pero no pude banearlo (rol superior al mío).`);
+            }
         }
     }
 };
