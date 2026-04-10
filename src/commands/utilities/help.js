@@ -47,7 +47,10 @@ export const command = {
                 { name: '🔒 Canal', value: `
 \`/lock\` - Bloquear canal
 \`/unlock\` - Desbloquear canal
-\`/slowmode <segundos>\` - Modo lento`, inline: false },
+\`/slowmode <segundos>\` - Modo lento
+\`/lockdown <estado>\` - Bloquear/desbloquear servidor
+\`/nuke\` - Limpiar historial del canal
+\`/vckick @usuario\` - Kickear de Voz`, inline: false },
                 { name: '👤 Info', value: `
 \`/avatar [@usuario]\` - Ver avatar
 \`/userinfo [@usuario]\` - Info de usuario
@@ -64,7 +67,10 @@ export const command = {
 \`/profile [@usuario]\` - Ver perfil
 \`/ticket\` - Gestión de tickets
 \`/ping\` - Ver latencia
-\`/help\` - Mostrar ayuda`, inline: false },
+\`/help\` - Mostrar ayuda
+\`/report @usuario <razón>\` - Reportar
+\`/afk [razón]\` - Ponerse ausente
+\`/sugerencias\` - Sugerencias (enviar/setup)`, inline: false },
                 { name: '🎮 Diversión', value: `
 \`/8ball <pregunta>\` - Bola mágica
 \`/coinflip\` - Cara o cruz

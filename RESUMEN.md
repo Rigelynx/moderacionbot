@@ -11,9 +11,10 @@
 src/
 ├── index.js              # Cliente principal, carga comandos, eventos y servidor web
 ├── commands/
-│   ├── moderation/       # 16 comandos de moderación
-│   ├── info/              # 3 comandos de información
-│   └── utilities/         # 2 comandos utilitarios
+│   ├── moderation/       # 19 comandos de moderación
+│   ├── info/              # 5 comandos de información
+│   ├── utilities/         # 12 comandos utilitarios
+│   └── fun/               # 3 comandos de diversión
 ├── events/
 │   └── interactionCreate.js  # Maneja comandos slash
 ├── utils/
@@ -44,9 +45,9 @@ src/
             └── dashboard.js   # Auth check, CRUD warnings/config
 ```
 
-## Comandos (41 total)
+## Comandos (47 total)
 
-### Moderación (24)
+### Moderación (27)
 | Comando | Descripción | Opciones | Permiso requerido |
 |---------|-------------|----------|-------------------|
 | `/ban` | Banear usuario | usuario, razón | BanMembers |
@@ -73,6 +74,9 @@ src/
 | `/lock` | Bloquear canal | - | ManageChannels |
 | `/unlock` | Desbloquear canal | - | ManageChannels |
 | `/slowmode` | Modo lento (0-21600s)| segundos | ManageChannels |
+| `/nuke` | Clonar y limpiar canal | - | ManageChannels |
+| `/vckick` | Expulsar de canal de voz | usuario | MuteMembers |
+| `/lockdown` | Bloquear el servidor | estado | ManageGuild |
 
 ### Info (5)
 | Comando | Descripción |
@@ -83,7 +87,7 @@ src/
 | `/roleinfo` | Info detallada de rol |
 | `/channelinfo` | Info de canal |
 
-### Utilidades (9)
+### Utilidades (12)
 | Comando | Descripción |
 |---------|-------------|
 | `/announce` | Enviar un anuncio |
@@ -96,6 +100,9 @@ src/
 | `/ticket`  | Gestión de tickets |
 | `/ping` | Ver latencia |
 | `/help` | Mostrar todos los comandos |
+| `/report` | Enviar reporte al Staff |
+| `/afk` | Ponerse ausente (AFK) |
+| `/sugerencias` | Sistema de sugerencias |
 
 ### Diversión (3)
 | Comando | Descripción |

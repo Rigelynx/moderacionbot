@@ -32,6 +32,9 @@ function getGuildConfig(guildId) {
                 categoryId: null,
                 roleId: null,
                 logChannelId: null
+            },
+            suggestions: {
+                channelId: null
             }
         };
     }
@@ -58,6 +61,11 @@ function getGuildConfig(guildId) {
             categoryId: null,
             roleId: null,
             logChannelId: null
+        };
+    }
+    if (!config.guilds[guildId].suggestions) {
+        config.guilds[guildId].suggestions = {
+            channelId: null
         };
     }
     return config.guilds[guildId];
@@ -206,6 +214,17 @@ export function setTicketsRole(guildId, roleId) {
 export function setTicketsLogChannel(guildId, logChannelId) {
     const gc = getGuildConfig(guildId);
     gc.tickets.logChannelId = logChannelId;
+    saveConfig();
+}
+
+// ── Suggestions ──
+export function getSuggestionsConfig(guildId) {
+    return getGuildConfig(guildId).suggestions;
+}
+
+export function setSuggestionsChannel(guildId, channelId) {
+    const gc = getGuildConfig(guildId);
+    gc.suggestions.channelId = channelId;
     saveConfig();
 }
 

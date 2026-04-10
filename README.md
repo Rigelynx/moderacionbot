@@ -6,7 +6,7 @@ ModBot es un bot de moderación robusto y avanzado para Discord con un panel de 
 
 ## 🚀 Características Principales
 
-- **41 Comandos Slash** organizados en Moderación, Información, Utilidades y Diversión.
+- **48 Comandos Slash** organizados en Moderación, Información, Utilidades y Diversión.
 - **Panel Web / Dashboard** (Express + OAuth2) para gestionar visualmente tus servidores.
 - **Sistema de Tickets Empresarial** con soporte para generación de Historial HTML visual enviado directamente al log.
 - **Tarjetas de Bienvenida/Despedida Premium** editables desde Discord y generadas dinámicamente con `@napi-rs/canvas`.
@@ -59,13 +59,18 @@ npm start
 - `/ticket` - Lanzará paneles embed nativos e infraestructuras HTML.
 - `/setnick`, `/removenick` - Manipulación de apodos inmediata.
 - `/clear`, `/slowmode` - Limpieza de chat.
-- `/lock`, `/unlock` - Bloqueo de canal.
+- `/lock`, `/unlock`, `/lockdown` - Bloqueo de canales y cierre del servidor en emergencias.
+- `/nuke` - Limpieza radical del historial clonando el canal de texto.
+- `/vckick` - Expulsión directa de usuarios en un chat de Voz.
 - `/role`, `/perm` - Sub-configuración del entorno.
 
 ### 👥 Utilidades & Info
 - `/announce`, `/poll` - Crear plantillas y mensajes formales.
 - `/snipe` - Acceder temporalmente al último mensaje de texto eliminado del canal.
 - `/register`, `/profile`, `/unregister` - Sistema Web/Bot.
+- `/report` - Envío privado de reportes a Logs.
+- `/afk` - Marcar tu estado como ausente.
+- `/sugerencias` - Sistema configurable híbrido de propuestas con votación.
 - `/userinfo`, `/serverinfo`, `/channelinfo`, `/roleinfo` - Check avanzado. 
  
 ### 🎮 Diversión
