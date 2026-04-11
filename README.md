@@ -1,6 +1,8 @@
 # ModBot - Discord Moderation Bot
 
-Bot de moderación para Discord construido con `discord.js` y `express`, con dashboard web, persistencia local en JSON y un sistema de tickets profesional configurable por comandos.
+![ModBot Cover](https://via.placeholder.com/1200x400/0a0a1a/5865f2?text=ModBot+-+Advanced+Discord+Moderation)
+
+ModBot es un bot de moderación robusto y avanzado para Discord con un panel de control en la web (Dashboard) integrado. Construido con `discord.js` y `express`.
 
 ## Características principales
 
