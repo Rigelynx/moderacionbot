@@ -6,7 +6,7 @@
 - Servidor web: `Express v4.21`
 - Lenguaje: `JavaScript ES Modules`
 - Entrada principal: `src/index.js`
-- Comandos raíz: `48`
+- Comandos raíz: `49`
 
 ## Estructura del proyecto
 
@@ -65,7 +65,7 @@ src/
 - `/roleinfo`
 - `/channelinfo`
 
-### Utilidades (13)
+### Utilidades (14)
 - `/announce`
 - `/poll`
 - `/snipe`
@@ -78,6 +78,7 @@ src/
 - `/help`
 - `/report`
 - `/afk`
+- `/unafk`
 - `/sugerencias`
 
 ### Diversión (3)

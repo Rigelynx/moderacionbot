@@ -58,6 +58,58 @@ function createDefaultTicketsConfig() {
     };
 }
 
+function createDefaultAppearanceConfig() {
+    return {
+        botDisplayName: '',
+        botDescription: 'Panel personalizable para gestionar tu bot y tu servidor.',
+        accentColor: '#5865F2',
+        dashboardBackgroundUrl: null,
+        profileBackgroundUrl: null
+    };
+}
+
+export function createDefaultCommandPermissionRule() {
+    return {
+        enabled: true,
+        allowedRoleIds: [],
+        blockedRoleIds: [],
+        allowedChannelIds: [],
+        blockedChannelIds: []
+    };
+}
+
+function normalizeIdList(value) {
+    if (!Array.isArray(value)) return [];
+
+    return [...new Set(
+        value
+            .map(item => String(item || '').trim())
+            .filter(Boolean)
+    )];
+}
+
+function normalizeCommandPermissionRule(rule = {}) {
+    return {
+        enabled: typeof rule.enabled === 'boolean' ? rule.enabled : true,
+        allowedRoleIds: normalizeIdList(rule.allowedRoleIds),
+        blockedRoleIds: normalizeIdList(rule.blockedRoleIds),
+        allowedChannelIds: normalizeIdList(rule.allowedChannelIds),
+        blockedChannelIds: normalizeIdList(rule.blockedChannelIds)
+    };
+}
+
+function hasCustomCommandPermissionRule(rule) {
+    if (!rule) return false;
+
+    return (
+        rule.enabled === false ||
+        rule.allowedRoleIds.length > 0 ||
+        rule.blockedRoleIds.length > 0 ||
+        rule.allowedChannelIds.length > 0 ||
+        rule.blockedChannelIds.length > 0
+    );
+}
+
 function getGuildConfig(guildId) {
     if (!config.guilds[guildId]) {
         config.guilds[guildId] = {
@@ -80,7 +132,9 @@ function getGuildConfig(guildId) {
             tickets: createDefaultTicketsConfig(),
             suggestions: {
                 channelId: null
-            }
+            },
+            appearance: createDefaultAppearanceConfig(),
+            commandPermissions: {}
         };
     }
     // Ensure welcome/goodbye exist on older configs
@@ -108,6 +162,22 @@ function getGuildConfig(guildId) {
         config.guilds[guildId].suggestions = {
             channelId: null
         };
+    }
+    config.guilds[guildId].appearance = {
+        ...createDefaultAppearanceConfig(),
+        ...config.guilds[guildId].appearance
+    };
+    if (!config.guilds[guildId].commandPermissions || typeof config.guilds[guildId].commandPermissions !== 'object' || Array.isArray(config.guilds[guildId].commandPermissions)) {
+        config.guilds[guildId].commandPermissions = {};
+    } else {
+        const normalizedRules = {};
+        for (const [commandName, rule] of Object.entries(config.guilds[guildId].commandPermissions)) {
+            const normalizedRule = normalizeCommandPermissionRule(rule);
+            if (hasCustomCommandPermissionRule(normalizedRule)) {
+                normalizedRules[commandName] = normalizedRule;
+            }
+        }
+        config.guilds[guildId].commandPermissions = normalizedRules;
     }
     return config.guilds[guildId];
 }
@@ -289,6 +359,56 @@ export function setSuggestionsChannel(guildId, channelId) {
     const gc = getGuildConfig(guildId);
     gc.suggestions.channelId = channelId;
     saveConfig();
+}
+
+// ── Appearance ──
+export function getAppearanceConfig(guildId) {
+    return getGuildConfig(guildId).appearance;
+}
+
+export function updateAppearanceConfig(guildId, updates) {
+    const gc = getGuildConfig(guildId);
+    gc.appearance = {
+        ...gc.appearance,
+        ...updates
+    };
+    saveConfig();
+    return gc.appearance;
+}
+
+// ── Command permissions ──
+export function getAllCommandPermissions(guildId) {
+    return getGuildConfig(guildId).commandPermissions;
+}
+
+export function getCommandPermission(guildId, commandName) {
+    return getGuildConfig(guildId).commandPermissions[commandName] || null;
+}
+
+export function updateCommandPermission(guildId, commandName, updates) {
+    const gc = getGuildConfig(guildId);
+    const normalizedRule = normalizeCommandPermissionRule(updates);
+
+    if (hasCustomCommandPermissionRule(normalizedRule)) {
+        gc.commandPermissions[commandName] = normalizedRule;
+    } else {
+        delete gc.commandPermissions[commandName];
+    }
+
+    saveConfig();
+    return gc.commandPermissions[commandName] || null;
+}
+
+export function clearCommandPermission(guildId, commandName) {
+    const gc = getGuildConfig(guildId);
+
+    if (!gc.commandPermissions[commandName]) {
+        return false;
+    }
+
+    delete gc.commandPermissions[commandName];
+    saveConfig();
+    return true;
 }
 
 export function getConfig() {

@@ -9,6 +9,20 @@ export function createAuthRouter(client) {
     const BASE_URL = (process.env.BASE_URL || 'http://localhost:3000').replace(/\/+$/, '');
     const REDIRECT_URI = `${BASE_URL}/auth/callback`;
 
+    function createAvatarUrl(user) {
+        return user.avatar
+            ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128`
+            : `https://cdn.discordapp.com/embed/avatars/${parseInt(user.discriminator || '0', 10) % 5}.png`;
+    }
+
+    function resolveStoredAvatar(user) {
+        if (typeof user.avatar === 'string' && user.avatar.startsWith('http')) {
+            return user.avatar;
+        }
+
+        return createAvatarUrl(user);
+    }
+
     // Redirect to Discord OAuth2
     router.get('/login', (req, res) => {
         const params = new URLSearchParams({
@@ -47,31 +61,54 @@ export function createAuthRouter(client) {
 
             const tokenData = await tokenRes.json();
 
-            // Get user info
-            const userRes = await fetch('https://discord.com/api/users/@me', {
-                headers: { Authorization: `Bearer ${tokenData.access_token}` }
-            });
-            const user = await userRes.json();
+            const authHeaders = {
+                Authorization: `Bearer ${tokenData.access_token}`
+            };
 
-            // Get user guilds
-            const guildsRes = await fetch('https://discord.com/api/users/@me/guilds', {
-                headers: { Authorization: `Bearer ${tokenData.access_token}` }
-            });
-            const guilds = await guildsRes.json();
+            // Load profile and guilds in parallel to reduce login latency
+            const [userRes, guildsRes] = await Promise.all([
+                fetch('https://discord.com/api/users/@me', { headers: authHeaders }),
+                fetch('https://discord.com/api/users/@me/guilds', { headers: authHeaders })
+            ]);
+
+            if (!userRes.ok || !guildsRes.ok) {
+                logError('OAuth2 user/guild fetch failed');
+                return res.redirect('/?error=user_fetch_failed');
+            }
+
+            const [user, guilds] = await Promise.all([
+                userRes.json(),
+                guildsRes.json()
+            ]);
 
             // Save to session
             req.session.user = {
                 id: user.id,
                 username: user.username,
                 globalName: user.global_name,
-                avatar: user.avatar,
+                avatar: createAvatarUrl(user),
                 discriminator: user.discriminator,
-                guilds: guilds
+                guilds: Array.isArray(guilds)
+                    ? guilds.map(guild => ({
+                        id: guild.id,
+                        name: guild.name,
+                        icon: guild.icon,
+                        permissions: guild.permissions
+                    }))
+                    : []
             };
             req.session.accessToken = tokenData.access_token;
 
             logInfo(`Usuario autenticado: ${user.username} (${user.id})`);
-            res.redirect('/dashboard');
+
+            req.session.save((sessionError) => {
+                if (sessionError) {
+                    logError(`Error guardando sesión OAuth2: ${sessionError.message}`);
+                    return res.redirect('/?error=session_failed');
+                }
+
+                res.redirect('/dashboard');
+            });
         } catch (err) {
             logError(`Error en OAuth2 callback: ${err.message}`);
             res.redirect('/?error=auth_failed');
@@ -95,9 +132,7 @@ export function createAuthRouter(client) {
             id: user.id,
             username: user.username,
             globalName: user.globalName,
-            avatar: user.avatar
-                ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128`
-                : `https://cdn.discordapp.com/embed/avatars/${parseInt(user.discriminator || '0') % 5}.png`
+            avatar: resolveStoredAvatar(user)
         });
     });
 

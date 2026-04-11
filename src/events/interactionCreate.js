@@ -7,6 +7,7 @@ import {
     handleTicketTypeSelect,
     getTicketButtonIds
 } from '../utils/ticketCore.js';
+import { checkCommandAccess } from '../utils/commandPermissions.js';
 
 const ticketButtons = getTicketButtonIds();
 
@@ -82,6 +83,14 @@ export default {
 
         const command = client.slashCommands.get(interaction.commandName);
         if (!command) return;
+
+        const commandAccess = checkCommandAccess(interaction, interaction.commandName);
+        if (!commandAccess.allowed) {
+            return interaction.reply({
+                content: commandAccess.reason,
+                flags: 64
+            }).catch(() => {});
+        }
 
         try {
             await command.execute(interaction, client);

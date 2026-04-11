@@ -21,7 +21,44 @@
         "enabled": true,
         "categoryId": "1479155095693431006",
         "roleId": null,
-        "logChannelId": "1492204572138147901"
+        "logChannelId": "1492204572138147901",
+        "panelChannelId": "1492204572138147901",
+        "panelMessageId": "1492321409127678015",
+        "maxOpenTickets": 1,
+        "namePrefix": "ticket",
+        "panelTitle": "Centro de Soporte",
+        "panelDescription": "Pulsa el botón para abrir un ticket privado con el equipo de soporte.",
+        "panelButtonLabel": "Abrir ticket",
+        "panelButtonEmoji": "🎫",
+        "welcomeMessage": "Hola {user}, ya abrimos tu ticket {ticket}. Un miembro del staff te atenderá pronto.",
+        "mentionStaffOnOpen": true,
+        "closeReasonRequired": true,
+        "types": [
+          {
+            "key": "soporte",
+            "label": "Soporte General",
+            "description": "Ayuda tecnica, dudas y asistencia general.",
+            "emoji": "🛠️",
+            "priority": "media",
+            "staffRoleId": null
+          },
+          {
+            "key": "reporte",
+            "label": "Reportar Usuario",
+            "description": "Reportes, conflictos o infracciones importantes.",
+            "emoji": "🚨",
+            "priority": "alta",
+            "staffRoleId": null
+          },
+          {
+            "key": "compras",
+            "label": "Compras y Rangos",
+            "description": "Pagos, productos, suscripciones o rangos.",
+            "emoji": "💳",
+            "priority": "media",
+            "staffRoleId": null
+          }
+        ]
       },
       "suggestions": {
         "channelId": null
@@ -48,7 +85,44 @@
         "enabled": false,
         "categoryId": null,
         "roleId": null,
-        "logChannelId": null
+        "logChannelId": null,
+        "panelChannelId": null,
+        "panelMessageId": null,
+        "maxOpenTickets": 1,
+        "namePrefix": "ticket",
+        "panelTitle": "Centro de Soporte",
+        "panelDescription": "Pulsa el botón para abrir un ticket privado con el equipo de soporte.",
+        "panelButtonLabel": "Abrir ticket",
+        "panelButtonEmoji": "🎫",
+        "welcomeMessage": "Hola {user}, ya abrimos tu ticket {ticket}. Un miembro del staff te atenderá pronto.",
+        "mentionStaffOnOpen": true,
+        "closeReasonRequired": true,
+        "types": [
+          {
+            "key": "soporte",
+            "label": "Soporte General",
+            "description": "Ayuda tecnica, dudas y asistencia general.",
+            "emoji": "🛠️",
+            "priority": "media",
+            "staffRoleId": null
+          },
+          {
+            "key": "reporte",
+            "label": "Reportar Usuario",
+            "description": "Reportes, conflictos o infracciones importantes.",
+            "emoji": "🚨",
+            "priority": "alta",
+            "staffRoleId": null
+          },
+          {
+            "key": "compras",
+            "label": "Compras y Rangos",
+            "description": "Pagos, productos, suscripciones o rangos.",
+            "emoji": "💳",
+            "priority": "media",
+            "staffRoleId": null
+          }
+        ]
       },
       "suggestions": {
         "channelId": null
@@ -75,7 +149,44 @@
         "enabled": false,
         "categoryId": null,
         "roleId": null,
-        "logChannelId": null
+        "logChannelId": null,
+        "panelChannelId": null,
+        "panelMessageId": null,
+        "maxOpenTickets": 1,
+        "namePrefix": "ticket",
+        "panelTitle": "Centro de Soporte",
+        "panelDescription": "Pulsa el botón para abrir un ticket privado con el equipo de soporte.",
+        "panelButtonLabel": "Abrir ticket",
+        "panelButtonEmoji": "🎫",
+        "welcomeMessage": "Hola {user}, ya abrimos tu ticket {ticket}. Un miembro del staff te atenderá pronto.",
+        "mentionStaffOnOpen": true,
+        "closeReasonRequired": true,
+        "types": [
+          {
+            "key": "soporte",
+            "label": "Soporte General",
+            "description": "Ayuda tecnica, dudas y asistencia general.",
+            "emoji": "🛠️",
+            "priority": "media",
+            "staffRoleId": null
+          },
+          {
+            "key": "reporte",
+            "label": "Reportar Usuario",
+            "description": "Reportes, conflictos o infracciones importantes.",
+            "emoji": "🚨",
+            "priority": "alta",
+            "staffRoleId": null
+          },
+          {
+            "key": "compras",
+            "label": "Compras y Rangos",
+            "description": "Pagos, productos, suscripciones o rangos.",
+            "emoji": "💳",
+            "priority": "media",
+            "staffRoleId": null
+          }
+        ]
       },
       "suggestions": {
         "channelId": null

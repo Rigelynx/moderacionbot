@@ -886,6 +886,9 @@ export async function handleTicketClose(interaction, options = {}) {
     const config = getTicketsConfig(interaction.guild.id);
     const ticketRecord = await requireTicketChannel(interaction, config);
     if (!ticketRecord) return;
+    const channel = interaction.channel;
+    const channelId = channel?.id;
+    const channelName = channel?.name || 'ticket';
 
     if (!canCloseTicket(interaction, config, ticketRecord)) {
         return respond(interaction, { content: '❌ No tienes permisos para cerrar este ticket.', flags: 64 });
@@ -905,10 +908,10 @@ export async function handleTicketClose(interaction, options = {}) {
 
     let transcript = null;
     try {
-        transcript = await discordTranscripts.createTranscript(interaction.channel, {
+        transcript = await discordTranscripts.createTranscript(channel, {
             limit: -1,
             returnType: 'attachment',
-            filename: `${interaction.channel.name}-transcript.html`,
+            filename: `${channelName}-transcript.html`,
             saveImages: true,
             poweredBy: false
         });
@@ -917,7 +920,7 @@ export async function handleTicketClose(interaction, options = {}) {
     }
 
     const logEmbed = buildTicketLogEmbed({
-        channel: interaction.channel,
+        channel,
         actorTag: interaction.user.tag,
         reason: reason || 'No especificada',
         resolution,
@@ -938,8 +941,10 @@ export async function handleTicketClose(interaction, options = {}) {
     await new Promise(resolve => setTimeout(resolve, 1200));
 
     try {
-        await interaction.channel.delete(`Ticket cerrado por ${interaction.user.tag}`);
-        deleteTicketRecord(interaction.guild.id, interaction.channel.id);
+        await channel.delete(`Ticket cerrado por ${interaction.user.tag}`);
+        if (channelId) {
+            deleteTicketRecord(interaction.guild.id, channelId);
+        }
     } catch (error) {
         console.error('Error cerrando ticket:', error);
         await respond(interaction, {

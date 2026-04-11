@@ -1,3 +1,25 @@
 {
-  "guilds": {}
+  "guilds": {
+    "1479155094137213069": {
+      "counter": 1,
+      "channels": {
+        "1492321517323817242": {
+          "ticketNumber": 1,
+          "ownerId": "1458647008154882220",
+          "ownerTag": "rigelynx_59900",
+          "typeKey": "soporte",
+          "typeLabel": "Soporte General",
+          "typeEmoji": "🛠️",
+          "priority": "media",
+          "claimedBy": "1458647008154882220",
+          "staffRoleId": null,
+          "participants": [],
+          "subject": "dd",
+          "description": "dd",
+          "createdAt": "2026-04-11T00:32:55.162Z",
+          "controlMessageId": "1492321520192585748"
+        }
+      }
+    }
+  }
 }

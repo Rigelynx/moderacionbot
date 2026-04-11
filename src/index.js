@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, Collection } from 'discord.js';
+import { Client, GatewayIntentBits, Collection, Events } from 'discord.js';
 import { readdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -36,6 +36,7 @@ async function loadCommands() {
 
         for (const file of commandFiles) {
             const { command } = await import(`./commands/${folder}/${file}`);
+            command.category = folder;
             client.slashCommands.set(command.name, command);
         }
     }
@@ -60,7 +61,7 @@ async function loadEvents() {
     logSuccess(`Eventos cargados: ${eventFiles.length}`);
 }
 
-client.on('ready', async () => {
+client.once(Events.ClientReady, async () => {
     logInfo(`Bot conectado como ${client.user.username}`);
     logInfo(`Sirviendo en ${client.guilds.cache.size} servidores`);
 

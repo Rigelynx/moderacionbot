@@ -1,9 +1,11 @@
 import { EmbedBuilder } from 'discord.js';
+import { getAppearanceConfig } from '../../utils/config.js';
 import { getUser, isRegistered } from '../../utils/users.js';
+import { generateProfileCard } from '../../utils/profileCard.js';
 
 export const command = {
     name: 'profile',
-    description: 'Ver el perfil registrado de un usuario',
+    description: 'Ver el perfil visual registrado de un usuario',
     options: [
         {
             name: 'usuario',
@@ -23,11 +25,13 @@ export const command = {
         }
 
         const data = getUser(target.id);
+        const appearance = getAppearanceConfig(interaction.guild.id);
+        const profileCard = await generateProfileCard(target, data, interaction.guild, appearance);
 
         const embed = new EmbedBuilder()
-            .setColor(0x5865f2)
+            .setColor(appearance.accentColor || 0x5865f2)
             .setTitle(`📋 Perfil de ${target.username}`)
-            .setThumbnail(target.displayAvatarURL({ size: 256 }))
+            .setDescription('Perfil visual generado con la apariencia configurada para este servidor.')
             .addFields(
                 { name: '👤 Usuario', value: data.discordUsername, inline: true },
                 { name: '🆔 ID', value: data.discordId, inline: true },
@@ -40,8 +44,9 @@ export const command = {
                     minute: '2-digit'
                 }), inline: true }
             )
+            .setImage('attachment://perfil.png')
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed] });
+        await interaction.reply({ embeds: [embed], files: [profileCard] });
     }
 };

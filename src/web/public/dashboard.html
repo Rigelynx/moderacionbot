@@ -90,6 +90,14 @@
                         <span class="nav-icon">⚙️</span>
                         <span>Configuración</span>
                     </button>
+                    <button class="nav-item" data-view="permissions" id="navPermissions">
+                        <span class="nav-icon">🛂</span>
+                        <span>Permisos</span>
+                    </button>
+                    <button class="nav-item" data-view="appearance" id="navAppearance">
+                        <span class="nav-icon">🎨</span>
+                        <span>Apariencia</span>
+                    </button>
                 </nav>
             </div>
 
@@ -268,6 +276,202 @@
                     </div>
                 </div>
 
+            </div>
+
+            <!-- Permissions View -->
+            <div class="view" id="view-permissions" style="display: none;">
+                <div class="view-header">
+                    <h1 class="view-title">🛂 Permisos por Comando</h1>
+                    <p class="view-subtitle">Crea restricciones opcionales por comando. Si no configuras nada, el bot sigue funcionando como siempre.</p>
+                </div>
+                <div class="stats-row stats-row-compact">
+                    <div class="stat-card">
+                        <span class="stat-icon">⌨️</span>
+                        <div class="stat-data">
+                            <span class="stat-number" id="permTotalCommands">0</span>
+                            <span class="stat-label">Comandos</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-icon">🧩</span>
+                        <div class="stat-data">
+                            <span class="stat-number" id="permCustomRules">0</span>
+                            <span class="stat-label">Reglas activas</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-icon">🔒</span>
+                        <div class="stat-data">
+                            <span class="stat-number" id="permRestrictedCommands">0</span>
+                            <span class="stat-label">Comandos restringidos</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header-inline">
+                        <div>
+                            <h3 class="card-title">Editor de reglas</h3>
+                            <p class="card-subtitle">Define qué roles o canales pueden usar un comando concreto.</p>
+                        </div>
+                        <span class="inline-badge" id="permSelectedCategory">—</span>
+                    </div>
+                    <div class="config-form stacked-form">
+                        <div class="form-grid two-columns">
+                            <div class="field-group">
+                                <label class="field-label" for="permCommandSelect">Comando</label>
+                                <select id="permCommandSelect" class="config-select"></select>
+                                <span class="field-help" id="permCommandDescription">Selecciona un comando para editar sus reglas.</span>
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label">Permiso nativo de Discord</label>
+                                <div class="info-box" id="permDiscordRequirement">Sin requisito adicional</div>
+                            </div>
+                        </div>
+
+                        <div class="info-banner">
+                            <strong>Nota:</strong> estas reglas son adicionales. Los permisos nativos del comando y la lógica interna del bot siguen aplicándose igual.
+                        </div>
+
+                        <div class="config-item">
+                            <div class="config-info">
+                                <span class="config-label">Comando habilitado</span>
+                                <span class="config-desc">Si lo desactivas, nadie podrá usar este comando en este servidor.</span>
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" id="permEnabledCheckbox" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="form-grid two-columns">
+                            <div class="field-group">
+                                <label class="field-label" for="permAllowedRoles">Roles permitidos</label>
+                                <select id="permAllowedRoles" class="config-select multi-select" multiple></select>
+                                <span class="field-help">Si eliges roles aquí, solo esos roles podrán usar el comando.</span>
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label" for="permBlockedRoles">Roles bloqueados</label>
+                                <select id="permBlockedRoles" class="config-select multi-select" multiple></select>
+                                <span class="field-help">Cualquier usuario con estos roles quedará bloqueado.</span>
+                            </div>
+                        </div>
+
+                        <div class="form-grid two-columns">
+                            <div class="field-group">
+                                <label class="field-label" for="permAllowedChannels">Canales permitidos</label>
+                                <select id="permAllowedChannels" class="config-select multi-select" multiple></select>
+                                <span class="field-help">Si eliges canales aquí, el comando solo funcionará en esos canales.</span>
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label" for="permBlockedChannels">Canales bloqueados</label>
+                                <select id="permBlockedChannels" class="config-select multi-select" multiple></select>
+                                <span class="field-help">Útil para evitar spam o limitar comandos a zonas concretas.</span>
+                            </div>
+                        </div>
+
+                        <div class="config-actions">
+                            <button class="btn btn-primary" id="savePermissionBtn">💾 Guardar regla</button>
+                            <button class="btn btn-secondary" id="resetPermissionBtn">♻️ Restablecer</button>
+                            <span class="save-status" id="permissionSaveStatus"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Appearance View -->
+            <div class="view" id="view-appearance" style="display: none;">
+                <div class="view-header">
+                    <h1 class="view-title">🎨 Apariencia y Perfil</h1>
+                    <p class="view-subtitle">Personaliza cómo se presenta el bot en el dashboard y define fondos para distintos sistemas visuales.</p>
+                </div>
+                <div class="card">
+                    <div class="card-header-inline">
+                        <div>
+                            <h3 class="card-title">Vista previa</h3>
+                            <p class="card-subtitle">Los cambios de nombre, descripción, color y fondo del dashboard se reflejan aquí.</p>
+                        </div>
+                        <span class="inline-badge">Preview</span>
+                    </div>
+                    <div class="appearance-preview" id="appearancePreview">
+                        <div class="appearance-preview-overlay"></div>
+                        <div class="appearance-preview-content">
+                            <img src="" alt="Bot avatar" class="appearance-avatar" id="appearancePreviewAvatar">
+                            <div class="appearance-copy">
+                                <span class="appearance-tag">Panel del bot</span>
+                                <h3 id="appearancePreviewName">ModBot</h3>
+                                <p id="appearancePreviewDescription">Panel personalizable para gestionar tu bot y tu servidor.</p>
+                            </div>
+                            <div class="appearance-chips">
+                                <span class="appearance-chip">Dashboard</span>
+                                <span class="appearance-chip">Perfil</span>
+                                <span class="appearance-chip">Fondos</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header-inline">
+                        <div>
+                            <h3 class="card-title">Perfil visible</h3>
+                            <p class="card-subtitle">Esto no cambia el usuario real del bot en Discord; personaliza la presentación dentro del panel.</p>
+                        </div>
+                    </div>
+                    <div class="config-form stacked-form">
+                        <div class="form-grid two-columns">
+                            <div class="field-group">
+                                <label class="field-label" for="appearanceBotName">Nombre mostrado</label>
+                                <input type="text" id="appearanceBotName" class="config-input full-width" placeholder="ModBot">
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label" for="appearanceAccentColor">Color principal</label>
+                                <div class="color-field">
+                                    <input type="color" id="appearanceAccentColorPicker" class="color-picker" value="#5865F2">
+                                    <input type="text" id="appearanceAccentColor" class="config-input full-width" placeholder="#5865F2">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field-group">
+                            <label class="field-label" for="appearanceBotDescription">Descripción corta</label>
+                            <textarea id="appearanceBotDescription" class="config-textarea" rows="4" placeholder="Describe el estilo o la utilidad principal del bot dentro del panel."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header-inline">
+                        <div>
+                            <h3 class="card-title">Fondos e imágenes</h3>
+                            <p class="card-subtitle">Usa URLs directas a imágenes. Déjalas vacías si quieres mantener el estilo por defecto.</p>
+                        </div>
+                    </div>
+                    <div class="config-form stacked-form">
+                        <div class="form-grid two-columns">
+                            <div class="field-group">
+                                <label class="field-label" for="appearanceDashboardBackground">Fondo del dashboard</label>
+                                <input type="text" id="appearanceDashboardBackground" class="config-input full-width" placeholder="https://...">
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label" for="appearanceProfileBackground">Fondo del perfil</label>
+                                <input type="text" id="appearanceProfileBackground" class="config-input full-width" placeholder="https://...">
+                            </div>
+                        </div>
+                        <div class="form-grid two-columns">
+                            <div class="field-group">
+                                <label class="field-label" for="appearanceWelcomeBackground">Fondo de bienvenida</label>
+                                <input type="text" id="appearanceWelcomeBackground" class="config-input full-width" placeholder="https://...">
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label" for="appearanceGoodbyeBackground">Fondo de despedida</label>
+                                <input type="text" id="appearanceGoodbyeBackground" class="config-input full-width" placeholder="https://...">
+                            </div>
+                        </div>
+                        <div class="config-actions">
+                            <button class="btn btn-primary" id="saveAppearanceBtn">💾 Guardar apariencia</button>
+                            <span class="save-status" id="appearanceSaveStatus"></span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
     </div>

@@ -6,11 +6,11 @@ ModBot es un bot de moderación robusto y avanzado para Discord con un panel de 
 
 ## Características principales
 
-- 48 comandos slash organizados en moderación, información, utilidades y diversión.
-- Dashboard web con OAuth2 de Discord para revisar servidores, warnings y configuración.
+- 49 comandos slash organizados en moderación, información, utilidades y diversión.
+- Dashboard web con OAuth2 de Discord para revisar servidores, warnings, usuarios, configuración, permisos opcionales por comando y apariencia.
 - Sistema de tickets premium con panel configurable, tipos de ticket, prioridades, claim, asignación, modal de apertura y transcripts HTML.
 - Sistema persistente de advertencias con auto-ban al llegar al límite.
-- Logs automáticos, bans temporales, welcome/goodbye con `@napi-rs/canvas`, sugerencias, AFK y registro de usuarios.
+- Logs automáticos, bans temporales, welcome/goodbye con `@napi-rs/canvas`, sugerencias, AFK, `unafk`, registro de usuarios y perfil visual configurable.
 
 ## Sistema de tickets premium
 
@@ -39,7 +39,7 @@ El comando `/ticket` ahora controla un flujo mucho más completo:
 
 ### Utilidades
 - `/announce`, `/poll`, `/snipe`, `/membercount`
-- `/register`, `/unregister`, `/profile`
+- `/register`, `/unregister`, `/profile`, `/unafk`
 - `/ticket`
 - `/ping`, `/help`, `/report`, `/afk`, `/sugerencias`
 
@@ -101,7 +101,25 @@ Abre `http://localhost:3000` para ver:
 
 - Landing pública con estadísticas en vivo y catálogo de comandos.
 - Dashboard con login por Discord.
-- Resumen de servidores, warnings y configuración básica.
+- Resumen del servidor y configuración de logs.
+- Gestión de warnings y usuarios registrados.
+- Permisos opcionales por comando con reglas por roles/canales.
+- Apariencia del bot en el panel: nombre visible, descripción, color principal y fondos.
+- Fondos específicos para `profile`, `welcome` y `goodbye`.
+
+## Perfil visual y fondos
+
+- `/profile` ahora genera una tarjeta visual con `@napi-rs/canvas`.
+- El fondo del perfil se puede cambiar desde el dashboard en la sección `Apariencia`.
+- Los fondos de `welcome` y `goodbye` se pueden cambiar desde el dashboard o con sus comandos slash.
+- Si no configuras ningún fondo ni permisos extra, el bot mantiene su comportamiento normal.
+
+## Despliegue y hosting
+
+- Por defecto, `npm start` levanta el bot y la web en el mismo proceso.
+- Para un proyecto como el tuyo, lo más simple es hostear bot y dashboard juntos en el mismo VPS o servicio Node.
+- No necesitas separarlo todavía salvo que luego quieras escalar la web por aparte, poner CDN, balanceo o una arquitectura más grande.
+- Cuando lo subas a producción, conviene añadir HTTPS, cookies seguras, mejor `SESSION_SECRET`, protección de cabeceras y revisión de rutas administrativas.
 
 ## Scripts
 

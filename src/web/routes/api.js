@@ -1,10 +1,44 @@
 import { Router } from 'express';
 import { requireAuth, requireGuildAdmin } from '../middleware/authMiddleware.js';
-import { getConfig, getLogChannelName, isLogsEnabled, setLogChannel, setLogsEnabled } from '../../utils/config.js';
+import {
+    createDefaultCommandPermissionRule,
+    getAllCommandPermissions,
+    getAppearanceConfig,
+    getConfig,
+    getGoodbyeConfig,
+    getLogChannelName,
+    getWelcomeConfig,
+    isLogsEnabled,
+    setGoodbyeBackground,
+    setLogChannel,
+    setLogsEnabled,
+    setWelcomeBackground,
+    updateAppearanceConfig,
+    updateCommandPermission,
+    clearCommandPermission
+} from '../../utils/config.js';
 import { getWarnings, removeWarning } from '../../utils/warnings.js';
 
 export function createApiRouter(client) {
     const router = Router();
+
+    function normalizeOptionalText(value) {
+        if (typeof value !== 'string') return undefined;
+
+        const trimmed = value.trim();
+        return trimmed || '';
+    }
+
+    function normalizeOptionalUrl(value) {
+        if (typeof value !== 'string') return undefined;
+
+        const trimmed = value.trim();
+        return trimmed || null;
+    }
+
+    function isValidHexColor(value) {
+        return /^#[0-9a-fA-F]{6}$/.test(value);
+    }
 
     // ──────────── Public endpoints ────────────
 
@@ -17,6 +51,15 @@ export function createApiRouter(client) {
             commands: client.slashCommands?.size || 0,
             uptime: process.uptime(),
             ping: client.ws.ping
+        });
+    });
+
+    router.get('/bot', (req, res) => {
+        res.json({
+            id: client.user?.id || null,
+            username: client.user?.username || 'ModBot',
+            tag: client.user?.tag || 'ModBot',
+            avatar: client.user?.displayAvatarURL({ size: 128 }) || null
         });
     });
 
@@ -64,6 +107,25 @@ export function createApiRouter(client) {
                 .sort((a, b) => b.position - a.position)
                 .map(r => ({ id: r.id, name: r.name, color: r.hexColor }))
         });
+    });
+
+    // Slash commands available for this bot
+    router.get('/guilds/:id/commands', requireAuth, requireGuildAdmin(client), (req, res) => {
+        const commands = [...client.slashCommands.values()]
+            .map(command => ({
+                name: command.name,
+                description: command.description,
+                category: command.category || 'general',
+                defaultMemberPermissions: command.default_member_permissions || null
+            }))
+            .sort((a, b) => {
+                if (a.category !== b.category) {
+                    return a.category.localeCompare(b.category);
+                }
+                return a.name.localeCompare(b.name);
+            });
+
+        res.json(commands);
     });
 
     // Guild warnings
@@ -163,6 +225,128 @@ export function createApiRouter(client) {
             success: true,
             logsEnabled: isLogsEnabled(guildId),
             logChannel: getLogChannelName(guildId)
+        });
+    });
+
+    // Appearance config
+    router.get('/guilds/:id/appearance', requireAuth, requireGuildAdmin(client), (req, res) => {
+        const guildId = req.params.id;
+        const appearance = getAppearanceConfig(guildId);
+        const welcome = getWelcomeConfig(guildId);
+        const goodbye = getGoodbyeConfig(guildId);
+
+        res.json({
+            ...appearance,
+            welcomeBackgroundUrl: welcome.backgroundUrl,
+            goodbyeBackgroundUrl: goodbye.backgroundUrl
+        });
+    });
+
+    router.post('/guilds/:id/appearance', requireAuth, requireGuildAdmin(client), (req, res) => {
+        const guildId = req.params.id;
+        const {
+            botDisplayName,
+            botDescription,
+            accentColor,
+            dashboardBackgroundUrl,
+            profileBackgroundUrl,
+            welcomeBackgroundUrl,
+            goodbyeBackgroundUrl
+        } = req.body;
+
+        const updates = {};
+
+        const normalizedBotDisplayName = normalizeOptionalText(botDisplayName);
+        if (normalizedBotDisplayName !== undefined) {
+            updates.botDisplayName = normalizedBotDisplayName;
+        }
+
+        const normalizedBotDescription = normalizeOptionalText(botDescription);
+        if (normalizedBotDescription !== undefined) {
+            updates.botDescription = normalizedBotDescription;
+        }
+
+        if (typeof accentColor === 'string') {
+            const normalizedColor = accentColor.trim().toUpperCase();
+            if (isValidHexColor(normalizedColor)) {
+                updates.accentColor = normalizedColor;
+            }
+        }
+
+        const normalizedDashboardBackgroundUrl = normalizeOptionalUrl(dashboardBackgroundUrl);
+        if (normalizedDashboardBackgroundUrl !== undefined) {
+            updates.dashboardBackgroundUrl = normalizedDashboardBackgroundUrl;
+        }
+
+        const normalizedProfileBackgroundUrl = normalizeOptionalUrl(profileBackgroundUrl);
+        if (normalizedProfileBackgroundUrl !== undefined) {
+            updates.profileBackgroundUrl = normalizedProfileBackgroundUrl;
+        }
+
+        const appearance = updateAppearanceConfig(guildId, updates);
+
+        const normalizedWelcomeBackgroundUrl = normalizeOptionalUrl(welcomeBackgroundUrl);
+        if (normalizedWelcomeBackgroundUrl !== undefined) {
+            setWelcomeBackground(guildId, normalizedWelcomeBackgroundUrl);
+        }
+
+        const normalizedGoodbyeBackgroundUrl = normalizeOptionalUrl(goodbyeBackgroundUrl);
+        if (normalizedGoodbyeBackgroundUrl !== undefined) {
+            setGoodbyeBackground(guildId, normalizedGoodbyeBackgroundUrl);
+        }
+
+        res.json({
+            success: true,
+            ...appearance,
+            welcomeBackgroundUrl: getWelcomeConfig(guildId).backgroundUrl,
+            goodbyeBackgroundUrl: getGoodbyeConfig(guildId).backgroundUrl
+        });
+    });
+
+    // Command permissions
+    router.get('/guilds/:id/command-permissions', requireAuth, requireGuildAdmin(client), (req, res) => {
+        const guildId = req.params.id;
+        res.json(getAllCommandPermissions(guildId));
+    });
+
+    router.post('/guilds/:id/command-permissions/:commandName', requireAuth, requireGuildAdmin(client), (req, res) => {
+        const guildId = req.params.id;
+        const commandName = req.params.commandName;
+
+        if (!client.slashCommands.has(commandName)) {
+            return res.status(404).json({ error: 'Comando no encontrado' });
+        }
+
+        const updatedRule = updateCommandPermission(guildId, commandName, {
+            enabled: typeof req.body.enabled === 'boolean' ? req.body.enabled : true,
+            allowedRoleIds: req.body.allowedRoleIds,
+            blockedRoleIds: req.body.blockedRoleIds,
+            allowedChannelIds: req.body.allowedChannelIds,
+            blockedChannelIds: req.body.blockedChannelIds
+        });
+
+        res.json({
+            success: true,
+            rule: updatedRule || createDefaultCommandPermissionRule(),
+            hasCustomSettings: Boolean(updatedRule)
+        });
+    });
+
+    router.delete('/guilds/:id/command-permissions/:commandName', requireAuth, requireGuildAdmin(client), (req, res) => {
+        const guildId = req.params.id;
+        const commandName = req.params.commandName;
+
+        if (!client.slashCommands.has(commandName)) {
+            return res.status(404).json({ error: 'Comando no encontrado' });
+        }
+
+        const removed = clearCommandPermission(guildId, commandName);
+
+        res.json({
+            success: true,
+            removed,
+            rule: createDefaultCommandPermissionRule(),
+            hasCustomSettings: false
         });
     });
 

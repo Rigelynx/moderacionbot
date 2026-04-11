@@ -7,7 +7,7 @@ export const command = {
         const embed = new EmbedBuilder()
             .setColor(0x5865f2)
             .setTitle('📚 Lista de Comandos')
-            .setDescription('Comandos disponibles en este bot')
+            .setDescription('Comandos disponibles en este bot y sistemas complementarios del dashboard web')
             .addFields(
                 { name: '🔨 Moderación', value: `
 \`/ban @usuario [razón]\` - Banear
@@ -64,7 +64,7 @@ export const command = {
 \`/membercount\` - Conteo de miembros
 \`/register\` - Registrarte en el bot
 \`/unregister\` - Eliminar registro
-\`/profile [@usuario]\` - Ver perfil
+\`/profile [@usuario]\` - Ver perfil visual
 \`/ticket setup|status|config|panel|mensaje\` - Panel y configuración
 \`/ticket tipos|tipo_add|tipo_edit|tipo_remove\` - Tipos de ticket
 \`/ticket claim|assign|priority|rename|add|remove|close\` - Gestión interna
@@ -72,13 +72,16 @@ export const command = {
 \`/help\` - Mostrar ayuda
 \`/report @usuario <razón>\` - Reportar
 \`/afk [razón]\` - Ponerse ausente
+\`/unafk\` - Quitar tu estado AFK
 \`/sugerencias\` - Sugerencias (enviar/setup)`, inline: false },
+                { name: '🌐 Dashboard Web', value: `
+Warnings, usuarios registrados, logs, permisos opcionales por comando y apariencia visual del bot por servidor.`, inline: false },
                 { name: '🎮 Diversión', value: `
 \`/8ball <pregunta>\` - Bola mágica
 \`/coinflip\` - Cara o cruz
 \`/rps <elección>\` - Piedra, papel, tijeras`, inline: false }
             )
-            .setFooter({ text: 'Usa / para ver los comandos de Discord' })
+            .setFooter({ text: 'Usa / para ver los comandos de Discord y el dashboard para ajustes visuales/permisos' })
             .setTimestamp();
 
         await interaction.reply({ embeds: [embed] });
