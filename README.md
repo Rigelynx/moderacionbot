@@ -1,90 +1,108 @@
 # ModBot - Discord Moderation Bot
 
-![ModBot Cover](https://via.placeholder.com/1200x400/0a0a1a/5865f2?text=ModBot+-+Advanced+Discord+Moderation)
+Bot de moderación para Discord construido con `discord.js` y `express`, con dashboard web, persistencia local en JSON y un sistema de tickets profesional configurable por comandos.
 
-ModBot es un bot de moderación robusto y avanzado para Discord con un panel de control en la web (Dashboard) integrado. Construido con `discord.js` y `express`.
+## Características principales
 
-## 🚀 Características Principales
+- 48 comandos slash organizados en moderación, información, utilidades y diversión.
+- Dashboard web con OAuth2 de Discord para revisar servidores, warnings y configuración.
+- Sistema de tickets premium con panel configurable, tipos de ticket, prioridades, claim, asignación, modal de apertura y transcripts HTML.
+- Sistema persistente de advertencias con auto-ban al llegar al límite.
+- Logs automáticos, bans temporales, welcome/goodbye con `@napi-rs/canvas`, sugerencias, AFK y registro de usuarios.
 
-- **48 Comandos Slash** organizados en Moderación, Información, Utilidades y Diversión.
-- **Panel Web / Dashboard** (Express + OAuth2) para gestionar visualmente tus servidores.
-- **Sistema de Tickets Empresarial** con soporte para generación de Historial HTML visual enviado directamente al log.
-- **Tarjetas de Bienvenida/Despedida Premium** editables desde Discord y generadas dinámicamente con `@napi-rs/canvas`.
-- **Sistema Persistente de Advertencias** que auto-banea a los usuarios tras sumar 5 penalizaciones.
-- **Bans Temporales** (Softbans, Tempbans, Massbans).
-- **Log Automático** de todas las actividades.
-- Snipe, perfiles registrados, control de roles avanzado y manipulación directa de permisos de canal (12 variables).
+## Sistema de tickets premium
 
-## 🛠 Instalación y Configuración
+El comando `/ticket` ahora controla un flujo mucho más completo:
 
-### 1. Clonar e Instalar Dependencias
+- Panel configurable con `/ticket panel` y publicación con `/ticket setup`.
+- Tipos de ticket configurables con `/ticket tipos`, `/ticket tipo_add`, `/ticket tipo_edit` y `/ticket tipo_remove`.
+- Apertura mediante botón rápido o selector de tipo desde el panel.
+- Modal de apertura para capturar asunto y contexto antes de crear el canal.
+- Prioridades por ticket: `baja`, `media`, `alta`, `urgente`.
+- Gestión interna con `/ticket claim`, `/ticket assign`, `/ticket priority`, `/ticket rename`, `/ticket add`, `/ticket remove`.
+- Cierre profesional con `/ticket close`, razón obligatoria y transcript `.html`.
+- Persistencia de tickets y contador en `src/data/tickets.json`.
+
+## Comandos destacados
+
+### Moderación
+- `/ban`, `/softban`, `/tempban`, `/unban`, `/untimeban`, `/massban`, `/massunban`
+- `/kick`, `/mute`, `/unmute`
+- `/warn`, `/unwarn`, `/warnings`
+- `/clear`, `/slowmode`, `/lock`, `/unlock`, `/lockdown`, `/nuke`, `/vckick`
+- `/role`, `/perm`, `/logs`, `/welcome`, `/goodbye`
+
+### Información
+- `/avatar`, `/userinfo`, `/serverinfo`, `/roleinfo`, `/channelinfo`
+
+### Utilidades
+- `/announce`, `/poll`, `/snipe`, `/membercount`
+- `/register`, `/unregister`, `/profile`
+- `/ticket`
+- `/ping`, `/help`, `/report`, `/afk`, `/sugerencias`
+
+### Diversión
+- `/8ball`, `/coinflip`, `/rps`
+
+## Instalación
+
+### 1. Instalar dependencias
 ```bash
-git clone https://github.com/tu-usuario/modbot.git
-cd modbot
 npm install
 ```
 
-### 2. Variables de Entorno (`.env`)
-Debes crear un archivo `.env` en la raíz de tu proyecto e introducir la información de las credenciales de tu aplicación alojada en el [Portal de Discord Developers](https://discord.com/developers/applications).
+### 2. Configurar `.env`
 ```env
 TOKEN=tu_token_discord
-GUILD_ID=id_del_servidor_de_pruebas (opcional)
+GUILD_ID=id_del_servidor_de_pruebas
 CLIENT_ID=id_del_bot_discord
 CLIENT_SECRET=secret_de_discord_oauth2
-SESSION_SECRET=cadena_hiper_segura_para_cookiessession
+SESSION_SECRET=una_cadena_segura_para_la_sesion
 BASE_URL=http://localhost:3000
 ```
 
-### 3. Registrar Comandos
-Antes de ejecutar tu bot, debes registrar todos sus comandos slash con las APIs nativas de Discord.
+### 3. Registrar comandos
 ```bash
 npm run deploy
 ```
 
-### 4. Iniciar el Servidor
-Usa el comando `npm start` para arrancar el Bot en el terminal y de manera adjunta iniciar tu Servidor EXPRESS en el puerto 3000.
+### 4. Iniciar el bot
 ```bash
 npm start
 ```
 
----
+## Setup rápido de tickets
 
-## 📡 Lista de Comandos Destacados
+1. `/ticket config habilitado:true categoria:#tickets rol_staff:@staff canal_logs:#ticket-logs`
+2. `/ticket panel titulo:"Centro de soporte" descripcion:"Selecciona el tipo de ticket o usa el botón rápido." boton:"Abrir ticket" emoji:🎫`
+3. `/ticket mensaje bienvenida:"Hola {user}, ya abrimos tu ticket {ticket}. Tipo: {type}. Prioridad: {priority}."`
+4. `/ticket tipo_add clave:alianzas nombre:"Alianzas" descripcion:"Solicitudes de alianza y colaboraciones." prioridad:media emoji:🤝`
+5. `/ticket setup canal:#abrir-ticket`
 
-### 🔨 Moderación
-- `/ban`, `/softban`, `/tempban`, `/unban`, `/untimeban`, `/massban`, `/massunban` - Herramientas exclusivas de ban.
-- `/mute`, `/unmute`, `/kick` - Sanciones y bloqueos de mensajes.
-- `/warn`, `/unwarn`, `/warnings` - Control de penalizaciones.
-- `/welcome`, `/goodbye` - Control avanzado de canales o fotos de inicio del servidor.
-- `/ticket` - Lanzará paneles embed nativos e infraestructuras HTML.
-- `/setnick`, `/removenick` - Manipulación de apodos inmediata.
-- `/clear`, `/slowmode` - Limpieza de chat.
-- `/lock`, `/unlock`, `/lockdown` - Bloqueo de canales y cierre del servidor en emergencias.
-- `/nuke` - Limpieza radical del historial clonando el canal de texto.
-- `/vckick` - Expulsión directa de usuarios en un chat de Voz.
-- `/role`, `/perm` - Sub-configuración del entorno.
+## Estructura relevante
 
-### 👥 Utilidades & Info
-- `/announce`, `/poll` - Crear plantillas y mensajes formales.
-- `/snipe` - Acceder temporalmente al último mensaje de texto eliminado del canal.
-- `/register`, `/profile`, `/unregister` - Sistema Web/Bot.
-- `/report` - Envío privado de reportes a Logs.
-- `/afk` - Marcar tu estado como ausente.
-- `/sugerencias` - Sistema configurable híbrido de propuestas con votación.
-- `/userinfo`, `/serverinfo`, `/channelinfo`, `/roleinfo` - Check avanzado. 
- 
-### 🎮 Diversión
-- `/8ball`, `/coinflip`, `/rps`.
+```text
+src/
+├── commands/utilities/ticket.js   # Suite completa de tickets
+├── events/interactionCreate.js    # Slash commands, botones, select menus y modals
+├── utils/ticketCore.js            # Flujo de apertura, claim, prioridad, asignación y cierre
+├── utils/ticketStore.js           # Persistencia de tickets abiertos y contador
+├── utils/config.js                # Configuración por servidor
+├── data/config.json               # Configuración persistente
+├── data/tickets.json              # Tickets activos y numeración
+└── web/                           # Landing + dashboard Express
+```
 
----
+## Panel web
 
-## 🌐 Panel Web (Dashboard)
-Abre [http://localhost:3000](http://localhost:3000) (o tu propio servidor) en el navegador para ingresar tu App:
-- **Landing Page**: Presentación completa, métricas en vivo.
-- **Login OAuth2**: Validación oficial de tu cliente de Discord.
-- **Resumen**: Estadísiticas visuales.
-- **Configuración de Logs**: Alternar on/off, elegir canal meta.
-- **Advertencias & Usuarios**: Listas JSON interactivas con funciones de eliminación mediante APIs REST propias.
+Abre `http://localhost:3000` para ver:
 
----
-© 2026 ModBot — Hecho con ❤️ para Discord
+- Landing pública con estadísticas en vivo y catálogo de comandos.
+- Dashboard con login por Discord.
+- Resumen de servidores, warnings y configuración básica.
+
+## Scripts
+
+- `npm start` - inicia el bot y el servidor web
+- `npm run dev` - inicia con `--watch`
+- `npm run deploy` - registra los slash commands

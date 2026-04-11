@@ -8,6 +8,56 @@ const configFile = join(__dirname, '..', 'data', 'config.json');
 
 let config = { guilds: {} };
 
+function createDefaultTicketTypes() {
+    return [
+        {
+            key: 'soporte',
+            label: 'Soporte General',
+            description: 'Ayuda tecnica, dudas y asistencia general.',
+            emoji: '🛠️',
+            priority: 'media',
+            staffRoleId: null
+        },
+        {
+            key: 'reporte',
+            label: 'Reportar Usuario',
+            description: 'Reportes, conflictos o infracciones importantes.',
+            emoji: '🚨',
+            priority: 'alta',
+            staffRoleId: null
+        },
+        {
+            key: 'compras',
+            label: 'Compras y Rangos',
+            description: 'Pagos, productos, suscripciones o rangos.',
+            emoji: '💳',
+            priority: 'media',
+            staffRoleId: null
+        }
+    ];
+}
+
+function createDefaultTicketsConfig() {
+    return {
+        enabled: false,
+        categoryId: null,
+        roleId: null,
+        logChannelId: null,
+        panelChannelId: null,
+        panelMessageId: null,
+        maxOpenTickets: 1,
+        namePrefix: 'ticket',
+        panelTitle: 'Centro de Soporte',
+        panelDescription: 'Pulsa el botón para abrir un ticket privado con el equipo de soporte.',
+        panelButtonLabel: 'Abrir ticket',
+        panelButtonEmoji: '🎫',
+        welcomeMessage: 'Hola {user}, ya abrimos tu ticket {ticket}. Un miembro del staff te atenderá pronto.',
+        mentionStaffOnOpen: true,
+        closeReasonRequired: true,
+        types: createDefaultTicketTypes()
+    };
+}
+
 function getGuildConfig(guildId) {
     if (!config.guilds[guildId]) {
         config.guilds[guildId] = {
@@ -27,12 +77,7 @@ function getGuildConfig(guildId) {
                 message: '**{user}** ha abandonado **{server}**. Ahora somos {count} 😢',
                 backgroundUrl: null
             },
-            tickets: {
-                enabled: false,
-                categoryId: null,
-                roleId: null,
-                logChannelId: null
-            },
+            tickets: createDefaultTicketsConfig(),
             suggestions: {
                 channelId: null
             }
@@ -55,14 +100,10 @@ function getGuildConfig(guildId) {
             backgroundUrl: null
         };
     }
-    if (!config.guilds[guildId].tickets) {
-        config.guilds[guildId].tickets = {
-            enabled: false,
-            categoryId: null,
-            roleId: null,
-            logChannelId: null
-        };
-    }
+    config.guilds[guildId].tickets = {
+        ...createDefaultTicketsConfig(),
+        ...config.guilds[guildId].tickets
+    };
     if (!config.guilds[guildId].suggestions) {
         config.guilds[guildId].suggestions = {
             channelId: null
@@ -215,6 +256,28 @@ export function setTicketsLogChannel(guildId, logChannelId) {
     const gc = getGuildConfig(guildId);
     gc.tickets.logChannelId = logChannelId;
     saveConfig();
+}
+
+export function setTicketsPanelChannel(guildId, panelChannelId) {
+    const gc = getGuildConfig(guildId);
+    gc.tickets.panelChannelId = panelChannelId;
+    saveConfig();
+}
+
+export function setTicketsPanelMessage(guildId, panelMessageId) {
+    const gc = getGuildConfig(guildId);
+    gc.tickets.panelMessageId = panelMessageId;
+    saveConfig();
+}
+
+export function updateTicketsConfig(guildId, updates) {
+    const gc = getGuildConfig(guildId);
+    gc.tickets = {
+        ...gc.tickets,
+        ...updates
+    };
+    saveConfig();
+    return gc.tickets;
 }
 
 // ── Suggestions ──

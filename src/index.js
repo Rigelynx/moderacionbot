@@ -6,6 +6,7 @@ import { config } from 'dotenv';
 import { handleError, logInfo, logSuccess } from './utils/logger.js';
 import { setupGuild } from './utils/guildSetup.js';
 import { loadConfig } from './utils/config.js';
+import { loadTickets } from './utils/ticketStore.js';
 import { loadWarnings } from './utils/warnings.js';
 import { loadTempBans, startTempBanChecker } from './utils/tempbans.js';
 import { loadUsers } from './utils/users.js';
@@ -80,6 +81,7 @@ client.on('guildCreate', async (guild) => {
 (async () => {
     try {
         loadConfig();
+        loadTickets();
         loadWarnings();
         loadTempBans();
         loadUsers();

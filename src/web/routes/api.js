@@ -204,34 +204,5 @@ export function createApiRouter(client) {
         }
     });
 
-    // ──────────── Tickets Config ────────────
-    router.get('/guilds/:id/tickets/config', requireAuth, requireGuildAdmin(client), async (req, res) => {
-        try {
-            const guildId = req.params.id;
-            const { getTicketsConfig } = await import('../../utils/config.js');
-            const config = getTicketsConfig(guildId);
-            res.json(config);
-        } catch (err) {
-            res.status(500).json({ error: 'Error leyendo config de tickets' });
-        }
-    });
-
-    router.post('/guilds/:id/tickets/config', requireAuth, requireGuildAdmin(client), async (req, res) => {
-        try {
-            const guildId = req.params.id;
-            const { enabled, categoryId, roleId, logChannelId } = req.body;
-            const { setTicketsEnabled, setTicketsCategory, setTicketsRole, setTicketsLogChannel, getTicketsConfig } = await import('../../utils/config.js');
-
-            if (typeof enabled === 'boolean') setTicketsEnabled(guildId, enabled);
-            if (categoryId !== undefined) setTicketsCategory(guildId, categoryId || null);
-            if (roleId !== undefined) setTicketsRole(guildId, roleId || null);
-            if (logChannelId !== undefined) setTicketsLogChannel(guildId, logChannelId || null);
-
-            res.json(getTicketsConfig(guildId));
-        } catch (err) {
-            res.status(500).json({ error: 'Error guardando config de tickets' });
-        }
-    });
-
     return router;
 }

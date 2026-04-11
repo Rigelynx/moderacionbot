@@ -1,260 +1,232 @@
 # RESUMEN - Bot de Discord para Moderación
 
-## Información General
-- **Framework:** discord.js v14.14.1
-- **Servidor Web:** Express v4.21
-- **Lenguaje:** JavaScript (ES Modules)
-- **Entrada principal:** `src/index.js`
+## Información general
 
-## Estructura del Proyecto
-```
+- Framework: `discord.js v14.14.1`
+- Servidor web: `Express v4.21`
+- Lenguaje: `JavaScript ES Modules`
+- Entrada principal: `src/index.js`
+- Comandos raíz: `48`
+
+## Estructura del proyecto
+
+```text
 src/
-├── index.js              # Cliente principal, carga comandos, eventos y servidor web
+├── index.js
 ├── commands/
-│   ├── moderation/       # 19 comandos de moderación
-│   ├── info/              # 5 comandos de información
-│   ├── utilities/         # 12 comandos utilitarios
-│   └── fun/               # 3 comandos de diversión
+│   ├── moderation/      # 27 comandos
+│   ├── info/            # 5 comandos
+│   ├── utilities/       # 13 comandos
+│   └── fun/             # 3 comandos
 ├── events/
-│   └── interactionCreate.js  # Maneja comandos slash
+│   ├── interactionCreate.js
+│   ├── guildMemberAdd.js
+│   ├── guildMemberRemove.js
+│   ├── messageCreate.js
+│   └── messageDelete.js
 ├── utils/
-│   ├── embeds.js          # Helpers para embeds y logs
-│   ├── config.js          # Configuración por servidor (JSON)
-│   ├── warnings.js        # Sistema persistente de advertencias (JSON)
-│   ├── helpers.js         # Utilidades varias
-│   ├── logger.js          # Logging consola
-│   └── guildSetup.js      # Setup automático de servidor
+│   ├── config.js
+│   ├── embeds.js
+│   ├── guildSetup.js
+│   ├── logger.js
+│   ├── ticketCore.js
+│   ├── ticketStore.js
+│   ├── tempbans.js
+│   ├── users.js
+│   ├── warnings.js
+│   └── ...
 ├── data/
-│   ├── config.json        # Configuración por servidor
-│   └── warnings.json      # Advertencias persistentes
+│   ├── config.json
+│   ├── tickets.json
+│   ├── tempbans.json
+│   ├── users.json
+│   └── warnings.json
 └── web/
-    ├── server.js              # Servidor Express (puerto 3000)
+    ├── server.js
     ├── routes/
-    │   ├── auth.js            # OAuth2 Discord (login, callback, logout, /me)
-    │   └── api.js             # API REST (stats, guilds, warnings, config)
     ├── middleware/
-    │   └── authMiddleware.js  # Verificación de sesión + permisos admin
     └── public/
-        ├── index.html         # Landing page
-        ├── dashboard.html     # Dashboard de administración
-        ├── css/
-        │   ├── landing.css    # Estilos landing (dark theme, glassmorphism)
-        │   └── dashboard.css  # Estilos dashboard (sidebar, cards, tablas)
-        └── js/
-            ├── landing.js     # Animaciones, stats en vivo, tabs
-            └── dashboard.js   # Auth check, CRUD warnings/config
 ```
 
-## Comandos (47 total)
+## Comandos
 
 ### Moderación (27)
-| Comando | Descripción | Opciones | Permiso requerido |
-|---------|-------------|----------|-------------------|
-| `/ban` | Banear usuario | usuario, razón | BanMembers |
-| `/softban` | Ban + unban automático | usuario, razón | BanMembers |
-| `/tempban` | Ban temporal | usuario, tiempo, razón | BanMembers |
-| `/unban` | Desbanear usuario | id, razón | BanMembers |
-| `/untimeban` | Quitar ban temporal | id, razón | BanMembers |
-| `/massban` | Banear múltiples | ids, razón | BanMembers |
-| `/massunban` | Desbanear múltiples | ids, razón | BanMembers |
-| `/kick` | Expulsar usuario | usuario, razón | KickMembers |
-| `/mute` | Silenciar usuario | usuario, cantidad, unidad | ModerateMembers |
-| `/unmute` | Quitar silencio | usuario | ModerateMembers |
-| `/warn` | Advertir usuario (5 = ban) | usuario, razón | ModerateMembers |
-| `/unwarn` | Quitar advertencia | usuario, número | ModerateMembers |
-| `/warnings` | Ver advertencias | usuario (opcional) | ModerateMembers |
-| `/clear` | Eliminar mensajes | cantidad | ManageMessages |
-| `/setnick` | Cambiar apodo | usuario, apodo | ManageNicknames |
-| `/removenick` | Quitar apodo | usuario | ManageNicknames |
-| `/role` | Gestionar roles | create/delete/add/rmv/list | ManageRoles |
-| `/logs` | Gestionar logs | set/disable/enable/status | ManageGuild |
-| `/welcome` | Sistema bienvenida | enable/channel/message/bg | ManageGuild |
-| `/goodbye` | Sistema despedida | enable/channel/message/bg | ManageGuild |
-| `/perm` | Permisos (12 subs) | view/send/embed/manage... | ManageChannels |
-| `/lock` | Bloquear canal | - | ManageChannels |
-| `/unlock` | Desbloquear canal | - | ManageChannels |
-| `/slowmode` | Modo lento (0-21600s)| segundos | ManageChannels |
-| `/nuke` | Clonar y limpiar canal | - | ManageChannels |
-| `/vckick` | Expulsar de canal de voz | usuario | MuteMembers |
-| `/lockdown` | Bloquear el servidor | estado | ManageGuild |
+- `/ban`, `/softban`, `/tempban`, `/unban`, `/untimeban`, `/massban`, `/massunban`
+- `/kick`, `/mute`, `/unmute`
+- `/warn`, `/unwarn`, `/warnings`
+- `/clear`, `/setnick`, `/removenick`
+- `/role`, `/logs`, `/welcome`, `/goodbye`
+- `/perm`, `/lock`, `/unlock`, `/slowmode`, `/nuke`, `/vckick`, `/lockdown`
 
-### Info (5)
-| Comando | Descripción |
-|---------|-------------|
-| `/avatar` | Ver avatar de usuario |
-| `/userinfo` | Info detallada de usuario |
-| `/serverinfo` | Info del servidor |
-| `/roleinfo` | Info detallada de rol |
-| `/channelinfo` | Info de canal |
+### Información (5)
+- `/avatar`
+- `/userinfo`
+- `/serverinfo`
+- `/roleinfo`
+- `/channelinfo`
 
-### Utilidades (12)
-| Comando | Descripción |
-|---------|-------------|
-| `/announce` | Enviar un anuncio |
-| `/poll` | Crear encuesta con reacciones |
-| `/snipe` | Último mensaje eliminado |
-| `/membercount`| Conteo detallado de miembros |
-| `/register` | Registrarse en el bot |
-| `/unregister` | Eliminar registro |
-| `/profile` | Ver perfil del registro |
-| `/ticket`  | Gestión de tickets |
-| `/ping` | Ver latencia |
-| `/help` | Mostrar todos los comandos |
-| `/report` | Enviar reporte al Staff |
-| `/afk` | Ponerse ausente (AFK) |
-| `/sugerencias` | Sistema de sugerencias |
+### Utilidades (13)
+- `/announce`
+- `/poll`
+- `/snipe`
+- `/membercount`
+- `/register`
+- `/unregister`
+- `/profile`
+- `/ticket`
+- `/ping`
+- `/help`
+- `/report`
+- `/afk`
+- `/sugerencias`
 
 ### Diversión (3)
-| Comando | Descripción |
-|---------|-------------|
-| `/8ball` | Bola mágica 8 |
-| `/coinflip` | Lanzar moneda |
-| `/rps` | Piedra, papel, tijeras |
+- `/8ball`
+- `/coinflip`
+- `/rps`
 
-## Panel Web (Dashboard)
+## Sistema de tickets profesional
 
-### Landing Page (`http://localhost:3000`)
-- Hero section con terminal animada mostrando comandos
-- Grid de características con glassmorphism
-- Lista de comandos con tabs por categoría
-- Estadísticas en vivo (servidores, usuarios, ping, uptime)
-- Botones de invitar bot y abrir dashboard
-- Diseño responsive, tema oscuro premium
+### Capacidades
 
-### Dashboard (`http://localhost:3000/dashboard`)
-- **Autenticación:** Login con Discord OAuth2
-- **Selector de servidores:** Lista servidores mutuos donde el usuario es admin
-- **Vista Resumen:** Stats del servidor + config rápida de logs
-- **Vista Advertencias:** Tabla de warns con opción de eliminar
-- **Vista Configuración:** Toggle de logs + selector de canal de logs
+- Panel configurable desde comandos con embed, botón rápido y selector de tipos.
+- Apertura mediante modal para capturar asunto y contexto antes de crear el canal.
+- Tipos de ticket configurables con prioridad por defecto, emoji y rol staff opcional por tipo.
+- Claim, liberación, asignación manual, cambio de prioridad, renombrado y control de participantes.
+- Cierre con razón obligatoria, resumen final opcional y transcript HTML automático.
+- Persistencia de tickets abiertos y numeración incremental en `src/data/tickets.json`.
 
-### API REST
-| Endpoint | Método | Auth | Descripción |
-|----------|--------|------|-------------|
-| `/api/stats` | GET | No | Stats públicas del bot |
-| `/api/guilds` | GET | Sí | Servidores mutuos del usuario |
-| `/api/guilds/:id` | GET | Admin | Info detallada del servidor |
-| `/api/guilds/:id/warnings` | GET | Admin | Advertencias del servidor |
-| `/api/guilds/:id/warnings/:userId/:index` | DELETE | Admin | Eliminar advertencia |
-| `/api/guilds/:id/config` | GET | Admin | Configuración del servidor |
-| `/api/guilds/:id/config` | POST | Admin | Actualizar configuración |
-| `/api/guilds/:id/users` | GET | Admin | Obtener usuarios registrados |
-| `/api/guilds/:id/users/:userId` | DELETE | Admin | Eliminar usuario registrado |
+### Subcomandos de `/ticket`
 
-### Autenticación OAuth2
-- `/auth/login` — Redirige a Discord para autorizar
-- `/auth/callback` — Recibe token y guarda sesión
-- `/auth/logout` — Destruye sesión
-- `/auth/me` — Retorna usuario actual
+- `/ticket setup` - publica o actualiza el panel
+- `/ticket status` - muestra el estado global del sistema
+- `/ticket config` - activa sistema, categoría, rol, logs, prefijo, límites y política de cierre
+- `/ticket panel` - personaliza el embed y botón del panel
+- `/ticket mensaje` - define el texto inicial del ticket
+- `/ticket tipos` - lista tipos configurados
+- `/ticket tipo_add` - crea un nuevo tipo
+- `/ticket tipo_edit` - edita un tipo existente
+- `/ticket tipo_remove` - elimina un tipo
+- `/ticket claim` - reclama o libera el ticket actual
+- `/ticket assign` - asigna el ticket a otro staff
+- `/ticket priority` - cambia la prioridad actual
+- `/ticket rename` - renombra el canal del ticket
+- `/ticket add` - añade participantes
+- `/ticket remove` - remueve participantes
+- `/ticket close` - cierra el ticket con razón y transcript
 
-## Sistema de Logs
-- Canal por defecto: `logs-moderacion`
-- Configuración **por servidor** en `data/config.json`
-- Funciones: `sendLog()`, `isLogsEnabled()`, `getLogChannelName()`
-- Se guarda en cada acción de moderación
-- Configurable desde Dashboard web o comandos slash
+### Datos persistidos
 
-## Sistema de Advertencias
-- Máximo 5 advertencias
-- Al llegar a 5: ban automático (si el bot puede)
-- Al desbanear: se resetean las advertencias
-- **Almacenamiento persistente** en `data/warnings.json`
-- Cada advertencia guarda: razón, moderador, fecha
-- Gestionable desde Dashboard web o comandos slash
+`config.json` guarda, por servidor:
 
-## Sistemas Adicionales
+```json
+{
+  "tickets": {
+    "enabled": true,
+    "categoryId": "123",
+    "roleId": "456",
+    "logChannelId": "789",
+    "panelChannelId": "321",
+    "panelMessageId": "654",
+    "maxOpenTickets": 1,
+    "namePrefix": "ticket",
+    "panelTitle": "Centro de Soporte",
+    "panelDescription": "Pulsa el botón para abrir un ticket privado con el equipo de soporte.",
+    "panelButtonLabel": "Abrir ticket",
+    "panelButtonEmoji": "🎫",
+    "welcomeMessage": "Hola {user}, ya abrimos tu ticket {ticket}.",
+    "mentionStaffOnOpen": true,
+    "closeReasonRequired": true,
+    "types": [
+      {
+        "key": "soporte",
+        "label": "Soporte General",
+        "description": "Ayuda técnica y dudas generales.",
+        "emoji": "🛠️",
+        "priority": "media",
+        "staffRoleId": null
+      }
+    ]
+  }
+}
+```
 
-### Welcome & Goodbye (Generación Canvas)
-- Configuración independiente por comandos `/welcome` y `/goodbye`
-- Usa la librería `@napi-rs/canvas` para crear imágenes premium personalizadas
-- Soporta configuración de canal, fondo y variables dinámicas en el mensaje (`{user}`, `{count}`, `{server}`)
+`tickets.json` guarda:
 
-### Registro de Usuarios (Persistent)
-- Los usuarios se registran vía el comando `/register`
-- La data se guarda en `data/users.json`
-- Gestionable desde la Web y eliminables vía dashboard
-
-### Sistema de Bans Temporales
-- Archivo de persistencia en `data/tempbans.json`
-- Bucle (Interval) que revisa cada minuto los expirados
-- Desbanea automáticamente y emite logs
-
-### Sistema de Tickets Empresarial (Configurable)
-- Los tickets son generados por interacción de botones con UI nativa de Discord (`/ticket setup`).
-- Aislamiento de permisos: Oculta el canal a `@everyone` y lo revela al autor y a un rol Staff designado.
-- Uso de `discord-html-transcripts` para auto-construir transcripciones `.html` interactivas en el servidor y mandarlas antes de su cierre.
-- Integración en Dashboard para seleccionar dinámicamente un rol Staff y la ID de la Categoría de despliegue.
-
-### Snipe (Mensajes Borrados)
-- Almacenamiento auto-limpiable (5 minutos en memoria, no en disco) para cada canal.
 ```json
 {
   "guilds": {
     "SERVER_ID": {
-      "logs": {
-        "enabled": true,
-        "channelName": "logs-moderacion"
+      "counter": 12,
+      "channels": {
+        "CHANNEL_ID": {
+          "ticketNumber": 12,
+          "ownerId": "USER_ID",
+          "typeKey": "soporte",
+          "typeLabel": "Soporte General",
+          "priority": "alta",
+          "claimedBy": "STAFF_ID",
+          "subject": "No puedo usar el comando",
+          "description": "El slash command no aparece en el servidor.",
+          "controlMessageId": "MESSAGE_ID"
+        }
       }
     }
   }
 }
 ```
 
-## Verificaciones de Seguridad
-- Cada comando tiene `default_member_permissions` (Discord oculta comandos sin permiso)
-- Protección contra auto-moderación (no puedes banearte/mutearte a ti mismo)
-- Protección contra moderar al bot
-- Verificación de `bannable`/`kickable` antes de actuar
-- Error handler resistente a doble reply
-- Dashboard protegido con OAuth2 + verificación de permisos de admin por servidor
+## Dashboard web
 
-## Colores de Embeds
-- Rojo (0xff0000): Ban, Lock, Rol eliminado
-- Verde (0x00ff00): Unban, Unlock, Unmute, Clear, SetNick, Unwarn
-- Naranja (0xffa500): Kick, Role Remove, Logs desactivados
-- Gris (0x808080): Mute, Perm Reset
-- Amarillo (0xffff00): Warn, Warnings
-- Azul (0x5865f2): Help, Ping, Info, Role List, Log Status
+### Landing page (`/`)
+- Hero con estadísticas en vivo
+- Catálogo de comandos
+- Sección destacada del sistema de tickets premium
+- CTA para invitar el bot o abrir el dashboard
 
-## Helpers Importantes
-- `createModerationEmbed({color, title, user, moderator, fields})` - Crea embed (acepta User y GuildMember)
-- `sendLog(guild, content, client)` - Envía a canal de logs
-- `getStatusEmoji(status)` - Retorna emoji de estado
-- `parseDuration(duration)` - Convierte "1h" a milisegundos
-- `addWarning(guildId, userId, reason, moderator)` - Agrega advertencia persistente
-- `removeWarning(guildId, userId, index)` - Quita advertencia
-- `getWarnings(guildId, userId)` - Lista de advertencias
-- `clearWarnings(guildId, userId)` - Limpia todas las advertencias
-- `startWebServer(client)` - Inicia servidor Express con el cliente de Discord
+### Dashboard (`/dashboard`)
+- Login con OAuth2 de Discord
+- Lista de servidores mutuos con permisos de administrador
+- Vista de warnings
+- Vista de configuración de logs
+- Vista de usuarios registrados
 
-## Setup Automático de Servidor
-- Crea canal de logs si no existe (en categoría "Moderación")
-- Se ejecuta al conectar y al unirse a nuevo servidor
+## Sistemas adicionales
 
-## Dependencias
+- Warnings persistentes con auto-ban al llegar a 5 advertencias
+- Tempbans con revisión automática cada minuto
+- Welcome/Goodbye con imágenes generadas por `@napi-rs/canvas`
+- Registro de usuarios en `users.json`
+- Snipe en memoria por canal
+- Logs por servidor
+
+## Dependencias principales
+
 ```json
 {
-  "@napi-rs/canvas": "^0.1.53",
-  "cookie-parser": "^1.4.7",
+  "@napi-rs/canvas": "^0.1.97",
   "discord-html-transcripts": "^3.2.0",
   "discord.js": "^14.14.1",
-  "dotenv": "^16.4.5",
   "express": "^4.21.2",
-  "express-session": "^1.18.1"
+  "express-session": "^1.18.1",
+  "cookie-parser": "^1.4.7",
+  "dotenv": "^16.4.5"
 }
 ```
 
-## Variables de Entorno (.env)
-```
+## Variables de entorno
+
+```env
 TOKEN=tu_token_discord
-GUILD_ID=id_del_servidor (opcional, para comandos de prueba)
+GUILD_ID=id_del_servidor_de_pruebas
 CLIENT_ID=id_del_bot
 CLIENT_SECRET=secret_de_discord_oauth2
-SESSION_SECRET=cadena_aleatoria_para_sesiones
+SESSION_SECRET=clave_segura_de_sesion
 BASE_URL=http://localhost:3000
 ```
 
-## Scripts NPM
-- `npm start` - Iniciar bot + servidor web
-- `npm run dev` - Iniciar con --watch
-- `npm run deploy` - Registrar comandos slash (ejecutar una vez o al cambiar comandos)
+## Scripts
+
+- `npm start`
+- `npm run dev`
+- `npm run deploy`

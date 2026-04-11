@@ -370,23 +370,12 @@ async function loadConfig() {
 
         document.getElementById('configLogsEnabled').checked = config.logsEnabled;
         document.getElementById('configLogChannel').value = config.logChannel;
-
-        // Load Tickets config
-        const tRes = await fetch(`/api/guilds/${currentGuildId}/tickets/config`);
-        if (tRes.ok) {
-            const tConfig = await tRes.json();
-            document.getElementById('configTicketsEnabled').checked = tConfig.enabled || false;
-            document.getElementById('configTicketsCategory').value = tConfig.categoryId || '';
-            document.getElementById('configTicketsRole').value = tConfig.roleId || '';
-        }
-
     } catch (err) {
         console.error('Error loading config:', err);
     }
 
     // Save handler
     document.getElementById('saveConfigBtn').onclick = saveConfig;
-    document.getElementById('saveTicketsBtn').onclick = saveTicketsConfig;
 }
 
 async function saveConfig() {
@@ -410,38 +399,6 @@ async function saveConfig() {
             document.getElementById('quickLogStatus').textContent = logsEnabled ? 'Activados' : 'Desactivados';
             document.getElementById('quickLogChannel').textContent = '#' + logChannel;
             document.getElementById('quickLogsCheckbox').checked = logsEnabled;
-        } else {
-            saveStatus.textContent = '❌ Error al guardar';
-        }
-    } catch {
-        saveStatus.textContent = '❌ Error de conexión';
-    }
-
-    setTimeout(() => {
-        saveStatus.classList.remove('visible');
-    }, 3000);
-}
-
-async function saveTicketsConfig() {
-    if (!currentGuildId) return;
-
-    const enabled = document.getElementById('configTicketsEnabled').checked;
-    const categoryId = document.getElementById('configTicketsCategory').value.trim();
-    const roleId = document.getElementById('configTicketsRole').value.trim();
-
-    const saveStatus = document.getElementById('saveTicketsStatus');
-    saveStatus.textContent = 'Guardando tickets...';
-    saveStatus.classList.add('visible');
-
-    try {
-        const res = await fetch(`/api/guilds/${currentGuildId}/tickets/config`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ enabled, categoryId, roleId })
-        });
-
-        if (res.ok) {
-            saveStatus.textContent = '✅ Tickets actualizados';
         } else {
             saveStatus.textContent = '❌ Error al guardar';
         }

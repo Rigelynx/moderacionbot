@@ -65,7 +65,9 @@ export const command = {
 \`/register\` - Registrarte en el bot
 \`/unregister\` - Eliminar registro
 \`/profile [@usuario]\` - Ver perfil
-\`/ticket\` - Gestión de tickets
+\`/ticket setup|status|config|panel|mensaje\` - Panel y configuración
+\`/ticket tipos|tipo_add|tipo_edit|tipo_remove\` - Tipos de ticket
+\`/ticket claim|assign|priority|rename|add|remove|close\` - Gestión interna
 \`/ping\` - Ver latencia
 \`/help\` - Mostrar ayuda
 \`/report @usuario <razón>\` - Reportar

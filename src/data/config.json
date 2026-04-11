@@ -1,3 +1,85 @@
 {
-  "guilds": {}
+  "guilds": {
+    "1479155094137213069": {
+      "logs": {
+        "enabled": true,
+        "channelName": "logs-moderacion"
+      },
+      "welcome": {
+        "enabled": false,
+        "channelId": null,
+        "message": "¡Bienvenido/a {user} a **{server}**! Eres el miembro #{count} 🎉",
+        "backgroundUrl": null
+      },
+      "goodbye": {
+        "enabled": false,
+        "channelId": null,
+        "message": "**{user}** ha abandonado **{server}**. Ahora somos {count} 😢",
+        "backgroundUrl": null
+      },
+      "tickets": {
+        "enabled": true,
+        "categoryId": "1479155095693431006",
+        "roleId": null,
+        "logChannelId": "1492204572138147901"
+      },
+      "suggestions": {
+        "channelId": null
+      }
+    },
+    "1482093098245820637": {
+      "logs": {
+        "enabled": true,
+        "channelName": "logs-moderacion"
+      },
+      "welcome": {
+        "enabled": false,
+        "channelId": null,
+        "message": "¡Bienvenido/a {user} a **{server}**! Eres el miembro #{count} 🎉",
+        "backgroundUrl": null
+      },
+      "goodbye": {
+        "enabled": false,
+        "channelId": null,
+        "message": "**{user}** ha abandonado **{server}**. Ahora somos {count} 😢",
+        "backgroundUrl": null
+      },
+      "tickets": {
+        "enabled": false,
+        "categoryId": null,
+        "roleId": null,
+        "logChannelId": null
+      },
+      "suggestions": {
+        "channelId": null
+      }
+    },
+    "1482280105379102792": {
+      "logs": {
+        "enabled": true,
+        "channelName": "logs-moderacion"
+      },
+      "welcome": {
+        "enabled": false,
+        "channelId": null,
+        "message": "¡Bienvenido/a {user} a **{server}**! Eres el miembro #{count} 🎉",
+        "backgroundUrl": null
+      },
+      "goodbye": {
+        "enabled": false,
+        "channelId": null,
+        "message": "**{user}** ha abandonado **{server}**. Ahora somos {count} 😢",
+        "backgroundUrl": null
+      },
+      "tickets": {
+        "enabled": false,
+        "categoryId": null,
+        "roleId": null,
+        "logChannelId": null
+      },
+      "suggestions": {
+        "channelId": null
+      }
+    }
+  }
 }

@@ -1,5 +1,6 @@
 import { EmbedBuilder } from 'discord.js';
 import { setAfk } from '../../utils/afk.js';
+import { sendLog } from '../../utils/embeds.js';
 
 export const command = {
     name: 'afk',
@@ -39,5 +40,15 @@ export const command = {
             .setTimestamp();
 
         await interaction.reply({ embeds: [embed] });
+
+        const logEmbed = new EmbedBuilder()
+            .setTitle('💤 Estado AFK Activado')
+            .setColor(0x808080)
+            .addFields(
+                { name: 'Usuario', value: `${interaction.user.tag} (${interaction.user.id})`, inline: true },
+                { name: 'Razón', value: razon, inline: false }
+            )
+            .setTimestamp();
+        await sendLog(interaction.guild, { embeds: [logEmbed] }, client);
     }
 };

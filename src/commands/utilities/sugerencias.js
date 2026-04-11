@@ -1,5 +1,6 @@
 import { EmbedBuilder } from 'discord.js';
 import { getSuggestionsConfig } from '../../utils/config.js';
+import { sendLog } from '../../utils/embeds.js';
 
 export const command = {
     name: 'sugerencias',
@@ -71,6 +72,17 @@ export const command = {
             const msg = await channel.send({ embeds: [embed] });
             await msg.react('✅');
             await msg.react('❌');
+
+            const logEmbed = new EmbedBuilder()
+                .setTitle('💡 Sugerencia Creada')
+                .setColor(0x00ff00)
+                .addFields(
+                    { name: 'Usuario', value: `${interaction.user.tag} (${interaction.user.id})`, inline: true },
+                    { name: 'Canal', value: `<#${channel.id}>`, inline: true },
+                    { name: 'Contenido', value: texto, inline: false }
+                )
+                .setTimestamp();
+            await sendLog(interaction.guild, { embeds: [logEmbed] }, client);
         }
     }
 };

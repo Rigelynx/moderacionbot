@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ModBot — Bot de Moderación para Discord</title>
-    <meta name="description" content="Bot de moderación avanzado para Discord. Protege tu servidor con comandos de ban, kick, mute, warn y más. Fácil de configurar, potente de usar.">
+    <meta name="description" content="Bot de moderación avanzado para Discord con dashboard web, logs automáticos y un sistema de tickets premium configurable por comandos.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -53,11 +53,11 @@
                 Online ahora
             </div>
             <h1 class="hero-title fade-in">
-                Moderación <span class="gradient-text">inteligente</span> para tu servidor
+                Moderación y soporte <span class="gradient-text">profesional</span> para tu servidor
             </h1>
             <p class="hero-subtitle fade-in">
-                Protege tu comunidad de Discord con herramientas avanzadas de moderación. 
-                Ban, kick, mute, warn, logs automáticos y mucho más — todo en un solo bot.
+                Protege tu comunidad y organiza tu soporte con un solo bot. 
+                Moderación avanzada, dashboard web y tickets premium con panel, tipos, prioridades, claim y transcripts HTML.
             </p>
             <div class="hero-buttons fade-in">
                 <a href="https://discord.com/oauth2/authorize?client_id=1491566928945352735&permissions=8&scope=bot%20applications.commands" 
@@ -100,32 +100,33 @@
                 <div class="terminal-body">
                     <div class="terminal-line" data-delay="0">
                         <span class="t-prompt">$</span>
-                        <span class="t-cmd">/warn</span>
-                        <span class="t-arg">@usuario</span>
-                        <span class="t-text">spam en chat general</span>
+                        <span class="t-cmd">/ticket</span>
+                        <span class="t-arg">tipo_add</span>
+                        <span class="t-text">clave:reporte prioridad:alta</span>
                     </div>
                     <div class="terminal-line t-response" data-delay="1">
                         <span class="t-success">✅</span>
-                        <span class="t-text">Advertencia #3 registrada. Usuario notificado.</span>
+                        <span class="t-text">Tipo "reporte" creado y disponible en el panel.</span>
                     </div>
                     <div class="terminal-line" data-delay="2">
                         <span class="t-prompt">$</span>
-                        <span class="t-cmd">/mute</span>
-                        <span class="t-arg">@usuario</span>
-                        <span class="t-text">30m — Múltiples advertencias</span>
+                        <span class="t-cmd">/ticket</span>
+                        <span class="t-arg">assign</span>
+                        <span class="t-text">@staff-prioridad</span>
                     </div>
                     <div class="terminal-line t-response" data-delay="3">
-                        <span class="t-success">🔇</span>
-                        <span class="t-text">Usuario silenciado por 30 minutos.</span>
+                        <span class="t-success">🛠️</span>
+                        <span class="t-text">Ticket #0042 asignado al staff correcto.</span>
                     </div>
                     <div class="terminal-line" data-delay="4">
                         <span class="t-prompt">$</span>
-                        <span class="t-cmd">/logs</span>
-                        <span class="t-arg">enable</span>
+                        <span class="t-cmd">/ticket</span>
+                        <span class="t-arg">close</span>
+                        <span class="t-text">razon:caso-resuelto</span>
                     </div>
                     <div class="terminal-line t-response" data-delay="5">
-                        <span class="t-success">📋</span>
-                        <span class="t-text">Logs de moderación activados en #logs-moderacion</span>
+                        <span class="t-success">📄</span>
+                        <span class="t-text">Transcript HTML enviado a #ticket-logs</span>
                     </div>
                 </div>
             </div>
@@ -138,7 +139,7 @@
             <div class="section-header fade-in">
                 <span class="section-badge">Características</span>
                 <h2 class="section-title">Todo lo que necesitas para <span class="gradient-text">moderar</span></h2>
-                <p class="section-subtitle">Herramientas poderosas diseñadas para mantener tu comunidad segura y organizada</p>
+                <p class="section-subtitle">Herramientas poderosas para moderar, responder tickets y mantener tu comunidad ordenada</p>
             </div>
             <div class="features-grid">
                 <div class="feature-card fade-in">
@@ -150,6 +151,11 @@
                     <div class="feature-icon">📋</div>
                     <h3>Logs Automáticos</h3>
                     <p>Registro completo de todas las acciones de moderación en un canal dedicado.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">🎫</div>
+                    <h3>Tickets Premium</h3>
+                    <p>Panel configurable, tipos de ticket, prioridades, claim, asignación y transcripts HTML.</p>
                 </div>
                 <div class="feature-card fade-in">
                     <div class="feature-icon">⚠️</div>
@@ -181,7 +187,7 @@
             <div class="section-header fade-in">
                 <span class="section-badge">Comandos</span>
                 <h2 class="section-title">Comandos <span class="gradient-text">disponibles</span></h2>
-                <p class="section-subtitle">47 comandos slash organizados en 4 categorías</p>
+                <p class="section-subtitle">48 comandos raíz y una suite de tickets premium configurable por subcomandos</p>
             </div>
             <div class="commands-tabs fade-in">
                 <button class="tab-btn active" data-tab="moderation">🛡️ Moderación</button>
@@ -317,7 +323,71 @@
                     </div>
                     <div class="command-item fade-in">
                         <span class="cmd-name">/ticket</span>
-                        <span class="cmd-desc">Sistema de tickets empresarial con historia HTML</span>
+                        <span class="cmd-desc">Sistema de tickets premium con modal, prioridades y transcripts HTML</span>
+                    </div>
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/ticket setup</span>
+                        <span class="cmd-desc">Publica o actualiza el panel de apertura de tickets</span>
+                    </div>
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/ticket status</span>
+                        <span class="cmd-desc">Muestra el estado global del sistema de tickets</span>
+                    </div>
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/ticket config</span>
+                        <span class="cmd-desc">Configura categoría, logs, límite, prefijo y política de cierre</span>
+                    </div>
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/ticket panel</span>
+                        <span class="cmd-desc">Personaliza el embed, canal y botón del panel</span>
+                    </div>
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/ticket mensaje</span>
+                        <span class="cmd-desc">Define el mensaje inicial dentro de cada ticket</span>
+                    </div>
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/ticket tipos</span>
+                        <span class="cmd-desc">Lista y organiza los tipos de ticket configurados</span>
+                    </div>
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/ticket tipo_add</span>
+                        <span class="cmd-desc">Crea tipos de ticket con emoji, prioridad y rol staff opcional</span>
+                    </div>
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/ticket tipo_edit</span>
+                        <span class="cmd-desc">Edita nombre, prioridad, emoji o rol del tipo</span>
+                    </div>
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/ticket tipo_remove</span>
+                        <span class="cmd-desc">Elimina tipos de ticket que ya no uses</span>
+                    </div>
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/ticket claim</span>
+                        <span class="cmd-desc">Reclama o libera el ticket actual desde el canal</span>
+                    </div>
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/ticket assign</span>
+                        <span class="cmd-desc">Asigna un ticket abierto a otro miembro del staff</span>
+                    </div>
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/ticket priority</span>
+                        <span class="cmd-desc">Sube o baja la prioridad del ticket actual</span>
+                    </div>
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/ticket rename</span>
+                        <span class="cmd-desc">Renombra el canal del ticket actual</span>
+                    </div>
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/ticket add</span>
+                        <span class="cmd-desc">Añade participantes extra al ticket</span>
+                    </div>
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/ticket remove</span>
+                        <span class="cmd-desc">Quita participantes adicionales del ticket</span>
+                    </div>
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/ticket close</span>
+                        <span class="cmd-desc">Cierra el ticket con razón obligatoria y transcript</span>
                     </div>
                     <div class="command-item fade-in">
                         <span class="cmd-name">/help</span>
@@ -395,7 +465,7 @@
         <div class="section-container">
             <div class="cta-content fade-in">
                 <h2 class="cta-title">¿Listo para proteger tu <span class="gradient-text">servidor</span>?</h2>
-                <p class="cta-subtitle">Añade ModBot en segundos. Sin configuración complicada, sin pagos.</p>
+                <p class="cta-subtitle">Añade ModBot en segundos y activa moderación avanzada más soporte profesional desde Discord.</p>
                 <div class="cta-buttons">
                     <a href="https://discord.com/oauth2/authorize?client_id=1491566928945352735&permissions=8&scope=bot%20applications.commands" 
                        target="_blank" class="btn btn-primary btn-lg">
