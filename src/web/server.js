@@ -11,7 +11,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export function startWebServer(client) {
     const app = express();
-    const PORT = process.env.PORT || 3000;
+    const PORT = process.env.PORT || process.env.SERVER_PORT || 3000;
 
     // Middleware
     app.use(express.json());
