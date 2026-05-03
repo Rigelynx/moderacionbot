@@ -6,10 +6,11 @@ ModBot es un bot de moderación robusto y avanzado para Discord con un panel de 
 
 ## Características principales
 
-- 49 comandos slash organizados en moderación, información, utilidades y diversión.
+- 50 comandos slash organizados en moderación, información, utilidades y diversión.
 - Dashboard web con OAuth2 de Discord para revisar servidores, warnings, usuarios, configuración, permisos opcionales por comando y apariencia.
 - Sistema de tickets premium con panel configurable, tipos de ticket, prioridades, claim, asignación, modal de apertura y transcripts HTML.
 - Sistema persistente de advertencias con auto-ban al llegar al límite.
+- Anti-raid con niveles `Monitor`, `Clean`, `Contain` y `Panic`, retorno automático/manual, flood control, anti-duplicados, anti-menciones y protección ante join raids.
 - Logs automáticos, bans temporales, welcome/goodbye con `@napi-rs/canvas`, sugerencias, AFK, `unafk`, registro de usuarios y perfil visual configurable.
 
 ## Sistema de tickets premium
@@ -28,11 +29,28 @@ El comando `/ticket` ahora controla un flujo mucho más completo:
 ## Comandos destacados
 
 ### Moderación
+- `/antiraid`
 - `/ban`, `/softban`, `/tempban`, `/unban`, `/untimeban`, `/massban`, `/massunban`
 - `/kick`, `/mute`, `/unmute`
 - `/warn`, `/unwarn`, `/warnings`
 - `/clear`, `/slowmode`, `/lock`, `/unlock`, `/lockdown`, `/nuke`, `/vckick`
 - `/role`, `/perm`, `/logs`, `/welcome`, `/goodbye`
+
+## Anti-Raid
+
+El comando `/antiraid` controla la nueva capa de defensa del servidor:
+
+- Niveles de respuesta: `Off`, `Monitor`, `Clean`, `Contain`, `Panic`.
+- Detección de flood, duplicados, menciones abusivas y olas de joins.
+- `Panic` con retorno automático al nivel base y salida manual con `/antiraid normalize`.
+- Whitelist por usuario, rol y canal para reducir falsos positivos.
+
+Flujo recomendado:
+
+1. `/antiraid enable`
+2. `/antiraid level nivel:monitor`
+3. `/antiraid config ...` para ajustar umbrales
+4. Cuando esté estable, subir a `clean` o `contain`
 
 ### Información
 - `/avatar`, `/userinfo`, `/serverinfo`, `/roleinfo`, `/channelinfo`

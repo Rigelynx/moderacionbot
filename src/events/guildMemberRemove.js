@@ -1,5 +1,5 @@
 import { getGoodbyeConfig } from '../utils/config.js';
-import { generateCard } from '../utils/welcomeCard.js';
+import { generateCard, replaceMemberPlaceholders } from '../utils/welcomeCard.js';
 import { sendLog } from '../utils/embeds.js';
 import { EmbedBuilder } from 'discord.js';
 
@@ -20,10 +20,7 @@ export default {
 
             // Build message with variables
             let message = config.message || '**{user}** ha abandonado **{server}** 😢';
-            message = message
-                .replace(/{user}/gi, member.user.username)
-                .replace(/{server}/gi, member.guild.name)
-                .replace(/{count}/gi, member.guild.memberCount.toString());
+            message = replaceMemberPlaceholders(message, member);
 
             await channel.send({
                 content: message,

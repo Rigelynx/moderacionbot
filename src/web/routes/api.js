@@ -3,6 +3,7 @@ import { requireAuth, requireGuildAdmin } from '../middleware/authMiddleware.js'
 import {
     createDefaultCommandPermissionRule,
     getAllCommandPermissions,
+    getAntiRaidConfig,
     getAppearanceConfig,
     getConfig,
     getGoodbyeConfig,
@@ -14,10 +15,16 @@ import {
     setLogsEnabled,
     setWelcomeBackground,
     updateAppearanceConfig,
+    updateAntiRaidConfig,
     updateCommandPermission,
     clearCommandPermission
 } from '../../utils/config.js';
 import { getWarnings, removeWarning } from '../../utils/warnings.js';
+import {
+    activateAntiRaidPanic,
+    getAntiRaidStatusSummary,
+    normalizeAntiRaidLevel
+} from '../../utils/antiRaid.js';
 
 export function createApiRouter(client) {
     const router = Router();
@@ -38,6 +45,22 @@ export function createApiRouter(client) {
 
     function isValidHexColor(value) {
         return /^#[0-9a-fA-F]{6}$/.test(value);
+    }
+
+    function normalizeInteger(value, min, max) {
+        const parsed = Number(value);
+        if (!Number.isInteger(parsed)) return undefined;
+        return Math.min(max, Math.max(min, parsed));
+    }
+
+    function normalizeIdArray(value) {
+        if (!Array.isArray(value)) return undefined;
+
+        return [...new Set(
+            value
+                .map(item => String(item || '').trim())
+                .filter(item => /^\d{17,20}$/.test(item))
+        )];
     }
 
     // ──────────── Public endpoints ────────────
@@ -225,6 +248,142 @@ export function createApiRouter(client) {
             success: true,
             logsEnabled: isLogsEnabled(guildId),
             logChannel: getLogChannelName(guildId)
+        });
+    });
+
+    // Anti-raid config
+    router.get('/guilds/:id/antiraid', requireAuth, requireGuildAdmin(client), (req, res) => {
+        const guildId = req.params.id;
+        res.json(getAntiRaidStatusSummary(guildId));
+    });
+
+    router.post('/guilds/:id/antiraid', requireAuth, requireGuildAdmin(client), (req, res) => {
+        const guildId = req.params.id;
+        const body = req.body || {};
+        const updates = {};
+
+        if (typeof body.enabled === 'boolean') {
+            updates.enabled = body.enabled;
+        }
+
+        const baseLevel = normalizeInteger(body.baseLevel, 1, 3);
+        if (baseLevel !== undefined) {
+            updates.baseLevel = baseLevel;
+        }
+
+        const whitelistUserIds = normalizeIdArray(body.whitelistUserIds);
+        if (whitelistUserIds !== undefined) {
+            updates.whitelistUserIds = whitelistUserIds;
+        }
+
+        const whitelistRoleIds = normalizeIdArray(body.whitelistRoleIds);
+        if (whitelistRoleIds !== undefined) {
+            updates.whitelistRoleIds = whitelistRoleIds;
+        }
+
+        const whitelistChannelIds = normalizeIdArray(body.whitelistChannelIds);
+        if (whitelistChannelIds !== undefined) {
+            updates.whitelistChannelIds = whitelistChannelIds;
+        }
+
+        const currentConfig = getAntiRaidStatusSummary(guildId);
+        const messageSpam = {};
+        const duplicateSpam = {};
+        const mentionSpam = {};
+        const joinRaid = {};
+        const panic = {};
+
+        if (typeof body.messageSpam?.enabled === 'boolean') messageSpam.enabled = body.messageSpam.enabled;
+        const maxMessages = normalizeInteger(body.messageSpam?.maxMessages, 3, 20);
+        if (maxMessages !== undefined) messageSpam.maxMessages = maxMessages;
+        const messageInterval = normalizeInteger(body.messageSpam?.intervalSeconds, 3, 60);
+        if (messageInterval !== undefined) messageSpam.intervalSeconds = messageInterval;
+        const messageTimeout = normalizeInteger(body.messageSpam?.timeoutMinutes, 1, 1440);
+        if (messageTimeout !== undefined) messageSpam.timeoutMinutes = messageTimeout;
+
+        if (typeof body.duplicateSpam?.enabled === 'boolean') duplicateSpam.enabled = body.duplicateSpam.enabled;
+        const maxDuplicates = normalizeInteger(body.duplicateSpam?.maxDuplicates, 2, 10);
+        if (maxDuplicates !== undefined) duplicateSpam.maxDuplicates = maxDuplicates;
+        const duplicateInterval = normalizeInteger(body.duplicateSpam?.intervalSeconds, 5, 120);
+        if (duplicateInterval !== undefined) duplicateSpam.intervalSeconds = duplicateInterval;
+        const duplicateTimeout = normalizeInteger(body.duplicateSpam?.timeoutMinutes, 1, 1440);
+        if (duplicateTimeout !== undefined) duplicateSpam.timeoutMinutes = duplicateTimeout;
+
+        if (typeof body.mentionSpam?.enabled === 'boolean') mentionSpam.enabled = body.mentionSpam.enabled;
+        const maxMentions = normalizeInteger(body.mentionSpam?.maxMentions, 2, 20);
+        if (maxMentions !== undefined) mentionSpam.maxMentions = maxMentions;
+        if (typeof body.mentionSpam?.blockEveryone === 'boolean') mentionSpam.blockEveryone = body.mentionSpam.blockEveryone;
+        const mentionTimeout = normalizeInteger(body.mentionSpam?.timeoutMinutes, 1, 1440);
+        if (mentionTimeout !== undefined) mentionSpam.timeoutMinutes = mentionTimeout;
+
+        if (typeof body.joinRaid?.enabled === 'boolean') joinRaid.enabled = body.joinRaid.enabled;
+        const warningJoins = normalizeInteger(body.joinRaid?.warningJoins, 3, 50);
+        if (warningJoins !== undefined) joinRaid.warningJoins = warningJoins;
+        const dangerJoins = normalizeInteger(body.joinRaid?.dangerJoins, 4, 100);
+        if (dangerJoins !== undefined) joinRaid.dangerJoins = dangerJoins;
+        const joinInterval = normalizeInteger(body.joinRaid?.intervalSeconds, 10, 300);
+        if (joinInterval !== undefined) joinRaid.intervalSeconds = joinInterval;
+        const newAccountDays = normalizeInteger(body.joinRaid?.newAccountDays, 1, 90);
+        if (newAccountDays !== undefined) joinRaid.newAccountDays = newAccountDays;
+        const suspiciousTimeout = normalizeInteger(body.joinRaid?.suspiciousTimeoutMinutes, 1, 1440);
+        if (suspiciousTimeout !== undefined) joinRaid.suspiciousTimeoutMinutes = suspiciousTimeout;
+
+        if (typeof body.panic?.autoActivateOnDanger === 'boolean') panic.autoActivateOnDanger = body.panic.autoActivateOnDanger;
+        const autoNormalizeMinutes = normalizeInteger(body.panic?.autoNormalizeMinutes, 1, 1440);
+        if (autoNormalizeMinutes !== undefined) panic.autoNormalizeMinutes = autoNormalizeMinutes;
+        const strictPercent = normalizeInteger(body.panic?.messageMultiplierPercent, 30, 100);
+        if (strictPercent !== undefined) panic.messageMultiplierPercent = strictPercent;
+
+        if (Object.keys(messageSpam).length) updates.messageSpam = messageSpam;
+        if (Object.keys(duplicateSpam).length) updates.duplicateSpam = duplicateSpam;
+        if (Object.keys(mentionSpam).length) updates.mentionSpam = mentionSpam;
+        if (Object.keys(joinRaid).length) updates.joinRaid = joinRaid;
+        if (Object.keys(panic).length) updates.panic = panic;
+
+        const currentLevel = currentConfig.enabled ? currentConfig.currentLevel : 0;
+        if (baseLevel !== undefined && currentLevel !== 4 && body.enabled !== false) {
+            updates.currentLevel = baseLevel;
+        }
+        if (typeof body.enabled === 'boolean' && body.enabled === true && currentLevel === 0) {
+            updates.currentLevel = baseLevel !== undefined ? baseLevel : currentConfig.baseLevel;
+        }
+
+        updateAntiRaidConfig(guildId, updates);
+        res.json({
+            success: true,
+            ...getAntiRaidStatusSummary(guildId)
+        });
+    });
+
+    router.post('/guilds/:id/antiraid/panic', requireAuth, requireGuildAdmin(client), async (req, res) => {
+        const guild = req.guild;
+        const reason = normalizeOptionalText(req.body?.reason) || `Activado desde dashboard por ${req.session.user?.username || 'Administrador'}`;
+        const minutes = normalizeInteger(req.body?.minutes, 1, 1440);
+
+        await activateAntiRaidPanic(guild, client, {
+            reason,
+            durationMinutes: minutes,
+            actorTag: req.session.user?.username || 'Dashboard'
+        });
+
+        res.json({
+            success: true,
+            ...getAntiRaidStatusSummary(guild.id)
+        });
+    });
+
+    router.post('/guilds/:id/antiraid/normalize', requireAuth, requireGuildAdmin(client), async (req, res) => {
+        const guild = req.guild;
+        const reason = normalizeOptionalText(req.body?.reason) || `Normalizado desde dashboard por ${req.session.user?.username || 'Administrador'}`;
+
+        await normalizeAntiRaidLevel(guild, client, {
+            reason,
+            actorTag: req.session.user?.username || 'Dashboard'
+        });
+
+        res.json({
+            success: true,
+            ...getAntiRaidStatusSummary(guild.id)
         });
     });
 

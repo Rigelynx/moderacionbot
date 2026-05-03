@@ -1,13 +1,17 @@
 import { getWelcomeConfig } from '../utils/config.js';
-import { generateCard } from '../utils/welcomeCard.js';
+import { generateCard, replaceMemberPlaceholders } from '../utils/welcomeCard.js';
 import { sendLog } from '../utils/embeds.js';
 import { EmbedBuilder } from 'discord.js';
+import { handleGuildMemberAddAntiRaid } from '../utils/antiRaid.js';
 
 export default {
     name: 'guildMemberAdd',
     once: false,
 
     async execute(member, client) {
+        const antiRaidResult = await handleGuildMemberAddAntiRaid(member, client);
+        if (antiRaidResult.suppressWelcome) return;
+
         const config = getWelcomeConfig(member.guild.id);
         if (!config?.enabled || !config?.channelId) return;
 
@@ -20,10 +24,7 @@ export default {
 
             // Build message with variables
             let message = config.message || '¡Bienvenido/a {user} a **{server}**! 🎉';
-            message = message
-                .replace(/{user}/gi, `<@${member.id}>`)
-                .replace(/{server}/gi, member.guild.name)
-                .replace(/{count}/gi, member.guild.memberCount.toString());
+            message = replaceMemberPlaceholders(message, member, { useMentionForUser: true });
 
             await channel.send({
                 content: message,

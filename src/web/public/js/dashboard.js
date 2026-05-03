@@ -5,6 +5,7 @@ let currentGuildData = null;
 let currentGuildCommands = [];
 let currentCommandPermissions = {};
 let currentAppearance = null;
+let currentAntiRaid = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     checkAuth();
@@ -49,6 +50,9 @@ function bindStaticEventHandlers() {
     document.getElementById('saveAppearanceBtn').onclick = saveAppearance;
     document.getElementById('savePermissionBtn').onclick = saveCommandPermission;
     document.getElementById('resetPermissionBtn').onclick = resetCommandPermission;
+    document.getElementById('saveAntiRaidBtn').onclick = saveAntiRaid;
+    document.getElementById('antiRaidPanicBtn').onclick = triggerAntiRaidPanic;
+    document.getElementById('antiRaidNormalizeBtn').onclick = normalizeAntiRaid;
     document.getElementById('permCommandSelect').onchange = renderSelectedCommandPermission;
 
     const accentInput = document.getElementById('appearanceAccentColor');
@@ -128,6 +132,7 @@ async function selectGuild(guildId) {
     currentGuildId = guildId;
     currentGuildCommands = [];
     currentCommandPermissions = {};
+    currentAntiRaid = null;
 
     document.querySelectorAll('.server-item').forEach(serverItem => serverItem.classList.remove('active'));
     document.querySelector(`.server-item[data-guild-id="${guildId}"]`)?.classList.add('active');
@@ -157,6 +162,7 @@ function initNavigation() {
             if (view === 'warnings') loadWarnings();
             if (view === 'users') loadUsers();
             if (view === 'config') loadConfig();
+            if (view === 'antiraid') loadAntiRaid();
             if (view === 'permissions') loadPermissions();
             if (view === 'appearance') loadAppearance();
         });
@@ -205,37 +211,72 @@ async function loadOverview() {
     document.getElementById('overviewRoles').textContent = guild.roles.length;
 
     try {
-        const warningsRes = await fetch(`/api/guilds/${currentGuildId}/warnings`);
-        const warnings = await warningsRes.json();
-        document.getElementById('overviewWarnings').textContent = Array.isArray(warnings) ? warnings.length : 0;
+        const [warningsRes, configRes, antiRaidRes] = await Promise.all([
+            fetch(`/api/guilds/${currentGuildId}/warnings`),
+            fetch(`/api/guilds/${currentGuildId}/config`),
+            fetch(`/api/guilds/${currentGuildId}/antiraid`)
+        ]);
+
+        if (warningsRes.ok) {
+            const warnings = await warningsRes.json();
+            document.getElementById('overviewWarnings').textContent = Array.isArray(warnings) ? warnings.length : 0;
+        } else {
+            document.getElementById('overviewWarnings').textContent = '—';
+        }
+
+        if (configRes.ok) {
+            const config = await configRes.json();
+
+            document.getElementById('quickLogStatus').textContent = config.logsEnabled ? 'Activados' : 'Desactivados';
+            document.getElementById('quickLogChannel').textContent = formatChannelName(config.logChannel);
+
+            const checkbox = document.getElementById('quickLogsCheckbox');
+            checkbox.checked = config.logsEnabled;
+            checkbox.onchange = async () => {
+                try {
+                    await fetch(`/api/guilds/${currentGuildId}/config`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ logsEnabled: checkbox.checked })
+                    });
+
+                    document.getElementById('quickLogStatus').textContent = checkbox.checked ? 'Activados' : 'Desactivados';
+                } catch {
+                    checkbox.checked = !checkbox.checked;
+                }
+            };
+        }
+
+        if (antiRaidRes.ok) {
+            currentAntiRaid = await antiRaidRes.json();
+            updateQuickAntiRaid(currentAntiRaid);
+
+            const antiRaidCheckbox = document.getElementById('quickAntiRaidCheckbox');
+            antiRaidCheckbox.checked = Boolean(currentAntiRaid.enabled);
+            antiRaidCheckbox.onchange = async () => {
+                try {
+                    const res = await fetch(`/api/guilds/${currentGuildId}/antiraid`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ enabled: antiRaidCheckbox.checked })
+                    });
+
+                    if (!res.ok) {
+                        throw new Error('quick-antiraid-save-failed');
+                    }
+
+                    currentAntiRaid = await res.json();
+                    updateQuickAntiRaid(currentAntiRaid);
+                } catch {
+                    antiRaidCheckbox.checked = !antiRaidCheckbox.checked;
+                }
+            };
+        } else {
+            updateQuickAntiRaid(null);
+        }
     } catch {
         document.getElementById('overviewWarnings').textContent = '—';
-    }
-
-    try {
-        const configRes = await fetch(`/api/guilds/${currentGuildId}/config`);
-        const config = await configRes.json();
-
-        document.getElementById('quickLogStatus').textContent = config.logsEnabled ? 'Activados' : 'Desactivados';
-        document.getElementById('quickLogChannel').textContent = formatChannelName(config.logChannel);
-
-        const checkbox = document.getElementById('quickLogsCheckbox');
-        checkbox.checked = config.logsEnabled;
-        checkbox.onchange = async () => {
-            try {
-                await fetch(`/api/guilds/${currentGuildId}/config`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ logsEnabled: checkbox.checked })
-                });
-
-                document.getElementById('quickLogStatus').textContent = checkbox.checked ? 'Activados' : 'Desactivados';
-            } catch {
-                checkbox.checked = !checkbox.checked;
-            }
-        };
-    } catch {
-        // Ignorar errores del resumen rápido
+        updateQuickAntiRaid(null);
     }
 }
 
@@ -436,6 +477,220 @@ async function saveConfig() {
         showStatus(saveStatus, '✅ Guardado correctamente');
     } catch {
         showStatus(saveStatus, '❌ Error al guardar', true);
+    }
+}
+
+async function loadAntiRaid(silent = false) {
+    if (!currentGuildId || !currentGuildData) return;
+
+    try {
+        const res = await fetch(`/api/guilds/${currentGuildId}/antiraid`);
+        if (!res.ok) {
+            throw new Error('antiraid-load-failed');
+        }
+
+        currentAntiRaid = await res.json();
+        fillAntiRaidForm(currentAntiRaid);
+        updateAntiRaidView(currentAntiRaid);
+        updateQuickAntiRaid(currentAntiRaid);
+    } catch (err) {
+        console.error('Error loading anti-raid:', err);
+        if (!silent) {
+            showStatus(document.getElementById('antiRaidSaveStatus'), '❌ Error cargando anti-raid', true);
+        }
+    }
+}
+
+function fillAntiRaidForm(config) {
+    document.getElementById('antiRaidEnabled').checked = Boolean(config.enabled);
+    document.getElementById('antiRaidBaseLevel').value = String(config.baseLevel || 1);
+    document.getElementById('antiRaidPanicMinutes').value = config.panic?.autoNormalizeMinutes ?? 15;
+    document.getElementById('antiRaidPanicStrictPercent').value = config.panic?.messageMultiplierPercent ?? 70;
+    document.getElementById('antiRaidManualPanicMinutes').value = config.panic?.autoNormalizeMinutes ?? 15;
+
+    document.getElementById('antiRaidMessageEnabled').value = String(Boolean(config.messageSpam?.enabled));
+    document.getElementById('antiRaidMaxMessages').value = config.messageSpam?.maxMessages ?? 6;
+    document.getElementById('antiRaidMessageWindow').value = config.messageSpam?.intervalSeconds ?? 8;
+    document.getElementById('antiRaidMessageTimeout').value = config.messageSpam?.timeoutMinutes ?? 10;
+
+    document.getElementById('antiRaidDuplicateEnabled').value = String(Boolean(config.duplicateSpam?.enabled));
+    document.getElementById('antiRaidMaxDuplicates').value = config.duplicateSpam?.maxDuplicates ?? 3;
+    document.getElementById('antiRaidDuplicateWindow').value = config.duplicateSpam?.intervalSeconds ?? 15;
+    document.getElementById('antiRaidDuplicateTimeout').value = config.duplicateSpam?.timeoutMinutes ?? 15;
+
+    document.getElementById('antiRaidMentionEnabled').value = String(Boolean(config.mentionSpam?.enabled));
+    document.getElementById('antiRaidMaxMentions').value = config.mentionSpam?.maxMentions ?? 5;
+    document.getElementById('antiRaidMentionTimeout').value = config.mentionSpam?.timeoutMinutes ?? 20;
+    document.getElementById('antiRaidBlockEveryone').checked = Boolean(config.mentionSpam?.blockEveryone);
+
+    document.getElementById('antiRaidJoinEnabled').value = String(Boolean(config.joinRaid?.enabled));
+    document.getElementById('antiRaidWarningJoins').value = config.joinRaid?.warningJoins ?? 6;
+    document.getElementById('antiRaidDangerJoins').value = config.joinRaid?.dangerJoins ?? 10;
+    document.getElementById('antiRaidJoinWindow').value = config.joinRaid?.intervalSeconds ?? 30;
+    document.getElementById('antiRaidNewAccountDays').value = config.joinRaid?.newAccountDays ?? 7;
+    document.getElementById('antiRaidSuspiciousTimeout').value = config.joinRaid?.suspiciousTimeoutMinutes ?? 30;
+    document.getElementById('antiRaidAutoPanic').checked = Boolean(config.panic?.autoActivateOnDanger);
+
+    populateMultiSelect('antiRaidWhitelistRoles', currentGuildData.roles, config.whitelistRoleIds || [], role => role.name);
+    populateMultiSelect('antiRaidWhitelistChannels', currentGuildData.channels, config.whitelistChannelIds || [], channel => `#${channel.name}`);
+    document.getElementById('antiRaidWhitelistUsers').value = serializeIdList(config.whitelistUserIds || []);
+}
+
+function updateAntiRaidView(config) {
+    document.getElementById('antiRaidEnabledStat').textContent = config.enabled ? 'Activado' : 'Apagado';
+    document.getElementById('antiRaidBaseLevelStat').textContent = config.baseLevelLabel || 'Monitor';
+    document.getElementById('antiRaidCurrentLevelStat').textContent = config.effectiveLevelLabel || 'Off';
+    document.getElementById('antiRaidPanicStat').textContent = config.currentLevel === 4 ? (config.panicRemainingText || 'Activo') : 'No activo';
+    document.getElementById('antiRaidCurrentBadge').textContent = config.currentLevel === 4
+        ? `Panic · ${config.panicRemainingText || 'activo'}`
+        : `Nivel actual: ${config.effectiveLevelLabel || 'Off'}`;
+}
+
+function updateQuickAntiRaid(config) {
+    document.getElementById('quickAntiRaidStatus').textContent = config
+        ? (config.enabled ? 'Activo y registrando eventos' : 'Apagado')
+        : 'No disponible';
+    document.getElementById('quickAntiRaidLevel').textContent = config
+        ? `${config.effectiveLevelLabel || 'Off'} · base ${config.baseLevelLabel || 'Monitor'}`
+        : '—';
+    document.getElementById('quickAntiRaidPanic').textContent = config
+        ? (config.currentLevel === 4 ? `Activo ${config.panicRemainingText || ''}`.trim() : 'No activo')
+        : '—';
+
+    const quickCheckbox = document.getElementById('quickAntiRaidCheckbox');
+    if (quickCheckbox) {
+        quickCheckbox.checked = Boolean(config?.enabled);
+    }
+}
+
+function getAntiRaidConfigFromInputs() {
+    return {
+        enabled: document.getElementById('antiRaidEnabled').checked,
+        baseLevel: Number(document.getElementById('antiRaidBaseLevel').value),
+        whitelistUserIds: parseIdList(document.getElementById('antiRaidWhitelistUsers').value),
+        whitelistRoleIds: getMultiSelectValues('antiRaidWhitelistRoles'),
+        whitelistChannelIds: getMultiSelectValues('antiRaidWhitelistChannels'),
+        messageSpam: {
+            enabled: document.getElementById('antiRaidMessageEnabled').value === 'true',
+            maxMessages: Number(document.getElementById('antiRaidMaxMessages').value),
+            intervalSeconds: Number(document.getElementById('antiRaidMessageWindow').value),
+            timeoutMinutes: Number(document.getElementById('antiRaidMessageTimeout').value)
+        },
+        duplicateSpam: {
+            enabled: document.getElementById('antiRaidDuplicateEnabled').value === 'true',
+            maxDuplicates: Number(document.getElementById('antiRaidMaxDuplicates').value),
+            intervalSeconds: Number(document.getElementById('antiRaidDuplicateWindow').value),
+            timeoutMinutes: Number(document.getElementById('antiRaidDuplicateTimeout').value)
+        },
+        mentionSpam: {
+            enabled: document.getElementById('antiRaidMentionEnabled').value === 'true',
+            maxMentions: Number(document.getElementById('antiRaidMaxMentions').value),
+            blockEveryone: document.getElementById('antiRaidBlockEveryone').checked,
+            timeoutMinutes: Number(document.getElementById('antiRaidMentionTimeout').value)
+        },
+        joinRaid: {
+            enabled: document.getElementById('antiRaidJoinEnabled').value === 'true',
+            warningJoins: Number(document.getElementById('antiRaidWarningJoins').value),
+            dangerJoins: Number(document.getElementById('antiRaidDangerJoins').value),
+            intervalSeconds: Number(document.getElementById('antiRaidJoinWindow').value),
+            newAccountDays: Number(document.getElementById('antiRaidNewAccountDays').value),
+            suspiciousTimeoutMinutes: Number(document.getElementById('antiRaidSuspiciousTimeout').value)
+        },
+        panic: {
+            autoActivateOnDanger: document.getElementById('antiRaidAutoPanic').checked,
+            autoNormalizeMinutes: Number(document.getElementById('antiRaidPanicMinutes').value),
+            messageMultiplierPercent: Number(document.getElementById('antiRaidPanicStrictPercent').value)
+        }
+    };
+}
+
+async function saveAntiRaid() {
+    if (!currentGuildId) return;
+
+    const payload = getAntiRaidConfigFromInputs();
+    const saveStatus = document.getElementById('antiRaidSaveStatus');
+    showStatus(saveStatus, 'Guardando...');
+
+    try {
+        const res = await fetch(`/api/guilds/${currentGuildId}/antiraid`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+            throw new Error('save-antiraid-failed');
+        }
+
+        currentAntiRaid = await res.json();
+        fillAntiRaidForm(currentAntiRaid);
+        updateAntiRaidView(currentAntiRaid);
+        updateQuickAntiRaid(currentAntiRaid);
+        showStatus(saveStatus, '✅ Anti-raid guardado');
+    } catch (err) {
+        console.error('Error saving anti-raid:', err);
+        showStatus(saveStatus, '❌ Error al guardar', true);
+    }
+}
+
+async function triggerAntiRaidPanic() {
+    if (!currentGuildId) return;
+
+    const saveStatus = document.getElementById('antiRaidActionStatus');
+    showStatus(saveStatus, 'Activando Panic...');
+
+    try {
+        const res = await fetch(`/api/guilds/${currentGuildId}/antiraid/panic`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                reason: document.getElementById('antiRaidActionReason').value.trim(),
+                minutes: Number(document.getElementById('antiRaidManualPanicMinutes').value) || Number(document.getElementById('antiRaidPanicMinutes').value)
+            })
+        });
+
+        if (!res.ok) {
+            throw new Error('panic-action-failed');
+        }
+
+        currentAntiRaid = await res.json();
+        fillAntiRaidForm(currentAntiRaid);
+        updateAntiRaidView(currentAntiRaid);
+        updateQuickAntiRaid(currentAntiRaid);
+        showStatus(saveStatus, '🚨 Panic activado');
+    } catch (err) {
+        console.error('Error activating panic:', err);
+        showStatus(saveStatus, '❌ No se pudo activar Panic', true);
+    }
+}
+
+async function normalizeAntiRaid() {
+    if (!currentGuildId) return;
+
+    const saveStatus = document.getElementById('antiRaidActionStatus');
+    showStatus(saveStatus, 'Normalizando...');
+
+    try {
+        const res = await fetch(`/api/guilds/${currentGuildId}/antiraid/normalize`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                reason: document.getElementById('antiRaidActionReason').value.trim()
+            })
+        });
+
+        if (!res.ok) {
+            throw new Error('normalize-action-failed');
+        }
+
+        currentAntiRaid = await res.json();
+        fillAntiRaidForm(currentAntiRaid);
+        updateAntiRaidView(currentAntiRaid);
+        updateQuickAntiRaid(currentAntiRaid);
+        showStatus(saveStatus, '🟢 Nivel base restaurado');
+    } catch (err) {
+        console.error('Error normalizing anti-raid:', err);
+        showStatus(saveStatus, '❌ No se pudo normalizar', true);
     }
 }
 
@@ -749,6 +1004,19 @@ function getEmptyPermissionRule() {
         allowedChannelIds: [],
         blockedChannelIds: []
     };
+}
+
+function parseIdList(value) {
+    return [...new Set(
+        String(value || '')
+            .split(/[\s,]+/)
+            .map(item => item.trim())
+            .filter(item => /^\d{17,20}$/.test(item))
+    )];
+}
+
+function serializeIdList(ids) {
+    return Array.isArray(ids) ? ids.join('\n') : '';
 }
 
 function formatChannelName(channelName) {

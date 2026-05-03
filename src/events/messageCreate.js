@@ -1,10 +1,14 @@
 import { Events, EmbedBuilder } from 'discord.js';
 import { getAfk, removeAfk } from '../utils/afk.js';
+import { handleMessageCreateAntiRaid } from '../utils/antiRaid.js';
 
 export default {
     name: Events.MessageCreate,
     async execute(message, client) {
         if (message.author.bot || !message.guild) return;
+
+        const antiRaidResult = await handleMessageCreateAntiRaid(message, client);
+        if (antiRaidResult.blocked) return;
 
         // 1. Revisar si el autor estaba AFK y volver a ponerlo activo
         const userAfk = getAfk(message.guild.id, message.author.id);

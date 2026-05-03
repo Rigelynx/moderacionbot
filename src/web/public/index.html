@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ModBot — Bot de Moderación para Discord</title>
-    <meta name="description" content="Bot de moderación avanzado para Discord con dashboard web, logs automáticos y un sistema de tickets premium configurable por comandos.">
+    <meta name="description" content="Bot de moderación avanzado para Discord con dashboard web, anti-raid por niveles, logs automáticos y un sistema de tickets premium configurable por comandos.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -28,6 +28,7 @@
             </a>
             <div class="nav-links">
                 <a href="#features">Características</a>
+                <a href="#defense">Anti-Raid</a>
                 <a href="#commands">Comandos</a>
                 <a href="#stats">Estadísticas</a>
                 <a href="/dashboard" class="nav-btn">Dashboard</a>
@@ -39,6 +40,7 @@
         <!-- Mobile menu -->
         <div class="mobile-menu" id="mobileMenu">
             <a href="#features">Características</a>
+            <a href="#defense">Anti-Raid</a>
             <a href="#commands">Comandos</a>
             <a href="#stats">Estadísticas</a>
             <a href="/dashboard" class="nav-btn">Dashboard</a>
@@ -57,7 +59,7 @@
             </h1>
             <p class="hero-subtitle fade-in">
                 Protege tu comunidad y organiza tu soporte con un solo bot. 
-                Moderación avanzada, dashboard web y tickets premium con panel, tipos, prioridades, claim y transcripts HTML.
+                Moderación avanzada, anti-raid por niveles, dashboard web y tickets premium con panel, tipos, prioridades, claim y transcripts HTML.
             </p>
             <div class="hero-buttons fade-in">
                 <a href="https://discord.com/oauth2/authorize?client_id=1491566928945352735&permissions=8&scope=bot%20applications.commands" 
@@ -100,33 +102,33 @@
                 <div class="terminal-body">
                     <div class="terminal-line" data-delay="0">
                         <span class="t-prompt">$</span>
-                        <span class="t-cmd">/ticket</span>
-                        <span class="t-arg">tipo_add</span>
-                        <span class="t-text">clave:reporte prioridad:alta</span>
+                        <span class="t-cmd">/antiraid</span>
+                        <span class="t-arg">level</span>
+                        <span class="t-text">nivel:clean</span>
                     </div>
                     <div class="terminal-line t-response" data-delay="1">
                         <span class="t-success">✅</span>
-                        <span class="t-text">Tipo "reporte" creado y disponible en el panel.</span>
+                        <span class="t-text">Nivel base ajustado. El servidor vuelve aquí tras Panic.</span>
                     </div>
                     <div class="terminal-line" data-delay="2">
                         <span class="t-prompt">$</span>
-                        <span class="t-cmd">/ticket</span>
-                        <span class="t-arg">assign</span>
-                        <span class="t-text">@staff-prioridad</span>
+                        <span class="t-cmd">/antiraid</span>
+                        <span class="t-arg">panic</span>
+                        <span class="t-text">minutos:15 razon:join-raid</span>
                     </div>
                     <div class="terminal-line t-response" data-delay="3">
-                        <span class="t-success">🛠️</span>
-                        <span class="t-text">Ticket #0042 asignado al staff correcto.</span>
+                        <span class="t-success">🚨</span>
+                        <span class="t-text">Panic activado. Los umbrales bajan y el servidor entra en alerta.</span>
                     </div>
                     <div class="terminal-line" data-delay="4">
                         <span class="t-prompt">$</span>
-                        <span class="t-cmd">/ticket</span>
-                        <span class="t-arg">close</span>
-                        <span class="t-text">razon:caso-resuelto</span>
+                        <span class="t-cmd">/antiraid</span>
+                        <span class="t-arg">normalize</span>
+                        <span class="t-text">razon:todo-calmo</span>
                     </div>
                     <div class="terminal-line t-response" data-delay="5">
-                        <span class="t-success">📄</span>
-                        <span class="t-text">Transcript HTML enviado a #ticket-logs</span>
+                        <span class="t-success">🟢</span>
+                        <span class="t-text">Retorno manual al nivel base. Protección estable sin dejar Panic encendido.</span>
                     </div>
                 </div>
             </div>
@@ -143,9 +145,19 @@
             </div>
             <div class="features-grid">
                 <div class="feature-card fade-in">
+                    <div class="feature-icon">🛡️</div>
+                    <h3>Anti-Raid por Niveles</h3>
+                    <p>Monitor, Clean, Contain y Panic con retorno automático y manual al nivel base.</p>
+                </div>
+                <div class="feature-card fade-in">
                     <div class="feature-icon">⚡</div>
                     <h3>Acciones Rápidas</h3>
                     <p>Ban, kick, mute y warn con un solo comando. Respuesta instantánea sin delay.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">🚨</div>
+                    <h3>Detección Inteligente</h3>
+                    <p>Controla flood, duplicados, menciones masivas y olas de joins sin depender solo del staff.</p>
                 </div>
                 <div class="feature-card fade-in">
                     <div class="feature-icon">📋</div>
@@ -181,13 +193,62 @@
         </div>
     </section>
 
+    <!-- Defense Section -->
+    <section class="defense" id="defense">
+        <div class="section-container">
+            <div class="section-header fade-in">
+                <span class="section-badge">Anti-Raid</span>
+                <h2 class="section-title">Respuesta por <span class="gradient-text">niveles</span></h2>
+                <p class="section-subtitle">No todo incidente merece la misma reacción. ModBot escala desde observación hasta contención real sin dejar el servidor bloqueado todo el día.</p>
+            </div>
+            <div class="defense-layout">
+                <div class="defense-grid">
+                    <div class="defense-card fade-in">
+                        <span class="defense-level">Monitor</span>
+                        <h3>Observa sin castigar</h3>
+                        <p>Registra eventos y ayuda a calibrar falsos positivos antes de activar sanciones.</p>
+                    </div>
+                    <div class="defense-card fade-in">
+                        <span class="defense-level">Clean</span>
+                        <h3>Limpia el ruido</h3>
+                        <p>Borra spam y contenido abusivo para cortar el impacto visible sin tocar usuarios legítimos de más.</p>
+                    </div>
+                    <div class="defense-card fade-in">
+                        <span class="defense-level">Contain</span>
+                        <h3>Contiene el ataque</h3>
+                        <p>Combina limpieza con timeout automático cuando hay señales claras de flood, duplicados o menciones masivas.</p>
+                    </div>
+                    <div class="defense-card fade-in">
+                        <span class="defense-level">Panic</span>
+                        <h3>Modo de crisis</h3>
+                        <p>Baja umbrales temporalmente, endurece respuestas y luego vuelve solo al nivel base cuando todo se calma.</p>
+                    </div>
+                </div>
+                <div class="defense-panel fade-in">
+                    <span class="panel-kicker">Cobertura</span>
+                    <h3>Qué protege ahora mismo</h3>
+                    <ul class="defense-list">
+                        <li>Flood de mensajes por ventana corta.</li>
+                        <li>Mensajes duplicados o casi idénticos.</li>
+                        <li>Menciones abusivas, incluyendo <code>@everyone</code> y <code>@here</code>.</li>
+                        <li>Join raids y cuentas nuevas durante oleadas sospechosas.</li>
+                        <li>Whitelist por usuario, rol y canal para evitar falsos positivos.</li>
+                    </ul>
+                    <div class="defense-callout">
+                        <strong>Retorno seguro:</strong> Panic puede apagarse solo por tiempo o manualmente desde slash command y dashboard.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Commands Section -->
     <section class="commands" id="commands">
         <div class="section-container">
             <div class="section-header fade-in">
                 <span class="section-badge">Comandos</span>
                 <h2 class="section-title">Comandos <span class="gradient-text">disponibles</span></h2>
-                <p class="section-subtitle">49 comandos raíz y una suite de tickets premium configurable por subcomandos</p>
+                <p class="section-subtitle">50 comandos raíz, anti-raid por niveles y una suite de tickets premium configurable por subcomandos</p>
             </div>
             <div class="commands-tabs fade-in">
                 <button class="tab-btn active" data-tab="moderation">🛡️ Moderación</button>
@@ -197,6 +258,10 @@
             </div>
             <div class="commands-content">
                 <div class="commands-list active" id="tab-moderation">
+                    <div class="command-item fade-in">
+                        <span class="cmd-name">/antiraid</span>
+                        <span class="cmd-desc">Activa niveles de defensa, Panic temporal y retorno al nivel base</span>
+                    </div>
                     <div class="command-item fade-in">
                         <span class="cmd-name">/ban</span>
                         <span class="cmd-desc">Banea a un usuario del servidor</span>

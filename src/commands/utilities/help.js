@@ -40,6 +40,14 @@ export const command = {
 \`/logs enable\` - Activar logs
 \`/logs disable\` - Desactivar logs
 \`/logs status\` - Ver estado de logs`, inline: false },
+                { name: '🛡️ Anti-Raid', value: `
+\`/antiraid status\` - Ver estado actual
+\`/antiraid enable|disable\` - Activar o apagar
+\`/antiraid level <nivel>\` - Cambiar nivel base
+\`/antiraid config ...\` - Ajustar spam, joins y Panic
+\`/antiraid panic [minutos]\` - Activar Panic temporal
+\`/antiraid normalize\` - Volver al nivel base
+\`/antiraid whitelist_add|remove|list\` - Gestionar exclusiones`, inline: false },
                 { name: '🔐 Permisos', value: `
 \`/perm <tipo> <canal> <rol> <estado>\`
 *Tipos: view, send, embed, manage, speak, react, attach, mention, history, connect, stream, priority*

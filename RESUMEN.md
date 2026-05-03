@@ -6,7 +6,7 @@
 - Servidor web: `Express v4.21`
 - Lenguaje: `JavaScript ES Modules`
 - Entrada principal: `src/index.js`
-- Comandos raíz: `49`
+- Comandos raíz: `50`
 
 ## Estructura del proyecto
 
@@ -50,7 +50,8 @@ src/
 
 ## Comandos
 
-### Moderación (27)
+### Moderación (28)
+- `/antiraid`
 - `/ban`, `/softban`, `/tempban`, `/unban`, `/untimeban`, `/massban`, `/massunban`
 - `/kick`, `/mute`, `/unmute`
 - `/warn`, `/unwarn`, `/warnings`
@@ -177,6 +178,31 @@ src/
 }
 ```
 
+## Sistema anti-raid
+
+### Capacidades
+
+- Deteccion de flood por cantidad de mensajes en una ventana corta.
+- Deteccion de mensajes duplicados o casi duplicados.
+- Bloqueo de menciones abusivas, incluyendo `@everyone` y `@here`.
+- Deteccion de join raids por oleadas de entradas en pocos segundos.
+- Whitelist por usuario, rol y canal para evitar falsos positivos.
+- Niveles de respuesta: `Off`, `Monitor`, `Clean`, `Contain` y `Panic`.
+- Retorno automatico desde `Panic` al nivel base y retorno manual con comando.
+
+### Subcomandos de `/antiraid`
+
+- `/antiraid status` - muestra estado, umbrales y nivel actual
+- `/antiraid enable` - activa el sistema
+- `/antiraid disable` - desactiva el sistema
+- `/antiraid level` - cambia el nivel base (`Monitor`, `Clean`, `Contain`)
+- `/antiraid config` - ajusta umbrales de spam, menciones, joins y Panic
+- `/antiraid panic` - activa `Panic` temporalmente
+- `/antiraid normalize` - vuelve manualmente al nivel base
+- `/antiraid whitelist_add` - anade usuarios, roles o canales a la whitelist
+- `/antiraid whitelist_remove` - quita elementos de la whitelist
+- `/antiraid whitelist_list` - muestra la whitelist actual
+
 ## Dashboard web
 
 ### Landing page (`/`)
@@ -196,6 +222,7 @@ src/
 
 - Warnings persistentes con auto-ban al llegar a 5 advertencias
 - Tempbans con revisión automática cada minuto
+- Anti-raid con auto-retorno de `Panic`, timeout a cuentas nuevas sospechosas y logs de incidentes
 - Welcome/Goodbye con imágenes generadas por `@napi-rs/canvas`
 - Registro de usuarios en `users.json`
 - Snipe en memoria por canal

@@ -1,6 +1,45 @@
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { AttachmentBuilder } from 'discord.js';
 
+export function getMemberCardData(member) {
+    const username = member?.user?.username || 'Usuario';
+    const globalName = member?.user?.globalName || null;
+    const displayName = member?.displayName || member?.nickname || globalName || username;
+    const guildName = member?.guild?.name || 'Servidor';
+    const memberCount = Number(member?.guild?.memberCount || 0);
+    const joinedTimestamp = member?.joinedTimestamp || member?.joinedAt?.getTime() || null;
+    const createdTimestamp = member?.user?.createdTimestamp || member?.user?.createdAt?.getTime() || null;
+
+    return {
+        username,
+        globalName,
+        displayName,
+        mention: `<@${member?.id}>`,
+        guildName,
+        memberCount,
+        joinedTimestamp,
+        joinedDateText: formatJoinedDate(joinedTimestamp),
+        tenureText: formatTenure(joinedTimestamp),
+        accountAgeText: formatTenure(createdTimestamp),
+        createdDateText: formatJoinedDate(createdTimestamp)
+    };
+}
+
+export function replaceMemberPlaceholders(template, memberOrData, { useMentionForUser = false } = {}) {
+    const data = memberOrData?.user ? getMemberCardData(memberOrData) : memberOrData;
+    const userText = useMentionForUser ? data.mention : data.displayName;
+
+    return String(template || '')
+        .replace(/{user}/gi, userText)
+        .replace(/{mention}/gi, data.mention)
+        .replace(/{username}/gi, data.username)
+        .replace(/{displayname}/gi, data.displayName)
+        .replace(/{server}/gi, data.guildName)
+        .replace(/{count}/gi, String(data.memberCount))
+        .replace(/{tenure}/gi, data.tenureText)
+        .replace(/{joined}/gi, data.joinedDateText);
+}
+
 /**
  * Generate a premium welcome/goodbye card image
  * @param {GuildMember} member - The guild member
@@ -11,6 +50,7 @@ import { AttachmentBuilder } from 'discord.js';
 export async function generateCard(member, type, config = {}) {
     const canvas = createCanvas(900, 320);
     const ctx = canvas.getContext('2d');
+    const memberData = getMemberCardData(member);
 
     // ── Background ──
     if (config.backgroundUrl) {
@@ -110,7 +150,7 @@ export async function generateCard(member, type, config = {}) {
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 48px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(member.user.username.charAt(0).toUpperCase(), avatarX + avatarSize / 2, avatarY + avatarSize / 2 + 16);
+        ctx.fillText(memberData.displayName.charAt(0).toUpperCase(), avatarX + avatarSize / 2, avatarY + avatarSize / 2 + 16);
     }
 
     // ── Title text ──
@@ -130,31 +170,42 @@ export async function generateCard(member, type, config = {}) {
     ctx.shadowBlur = 0;
 
     // ── Username ──
-    const username = member.user.globalName || member.user.username;
     ctx.font = 'bold 22px sans-serif';
     ctx.fillStyle = type === 'welcome' ? '#a8b3f5' : '#f5a8a8';
-    ctx.fillText(username, 450, titleY + 35);
+    ctx.fillText(memberData.displayName, 450, titleY + 35);
+
+    // ── Username handle ──
+    ctx.font = '15px sans-serif';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.58)';
+    ctx.fillText(`@${memberData.username}`, 450, titleY + 58);
 
     // ── Custom message ──
     const defaultMsg = type === 'welcome'
-        ? `¡Bienvenido/a a ${member.guild.name}!`
-        : `${username} ha abandonado el servidor`;
+        ? `¡Bienvenido/a a ${memberData.guildName}!`
+        : `${memberData.displayName} ha abandonado el servidor`;
 
-    let message = config.message || defaultMsg;
-    message = message
-        .replace(/{user}/gi, username)
-        .replace(/{server}/gi, member.guild.name)
-        .replace(/{count}/gi, member.guild.memberCount.toString());
+    const message = replaceMemberPlaceholders(config.message || defaultMsg, memberData);
 
     ctx.font = '16px sans-serif';
     ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-    ctx.fillText(truncateText(message, 70), 450, titleY + 65);
+    ctx.fillText(truncateText(message, 82), 450, titleY + 82);
 
-    // ── Member count ──
-    const countText = `Miembro #${member.guild.memberCount}`;
+    // ── Footer metadata ──
+    const footerText = type === 'welcome'
+        ? `Miembro #${memberData.memberCount} • Se unio ${memberData.joinedDateText}`
+        : `Tiempo en el servidor: ${memberData.tenureText}`;
+
+    const secondaryFooterText = type === 'welcome'
+        ? `Cuenta creada hace ${memberData.accountAgeText}`
+        : `Ingreso al servidor: ${memberData.joinedDateText}`;
+
     ctx.font = '14px sans-serif';
     ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
-    ctx.fillText(countText, 450, titleY + 90);
+    ctx.fillText(truncateText(footerText, 84), 450, titleY + 106);
+
+    ctx.font = '13px sans-serif';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.24)';
+    ctx.fillText(truncateText(secondaryFooterText, 86), 450, titleY + 128);
 
     // ── Encode and return ──
     const buffer = await canvas.encode('png');
@@ -229,4 +280,42 @@ function roundRect(ctx, x, y, width, height, radius) {
 
 function truncateText(text, maxLen) {
     return text.length > maxLen ? text.substring(0, maxLen - 3) + '...' : text;
+}
+
+function formatJoinedDate(timestamp) {
+    if (!timestamp) return 'Fecha no disponible';
+
+    try {
+        return new Intl.DateTimeFormat('es-ES', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+        }).format(new Date(timestamp));
+    } catch {
+        return 'Fecha no disponible';
+    }
+}
+
+function formatTenure(joinedTimestamp) {
+    if (!joinedTimestamp) return 'Tiempo no disponible';
+
+    const diffMs = Math.max(0, Date.now() - joinedTimestamp);
+    const units = [
+        { label: 'año', value: 365 * 24 * 60 * 60 * 1000 },
+        { label: 'mes', value: 30 * 24 * 60 * 60 * 1000 },
+        { label: 'semana', value: 7 * 24 * 60 * 60 * 1000 },
+        { label: 'día', value: 24 * 60 * 60 * 1000 },
+        { label: 'hora', value: 60 * 60 * 1000 },
+        { label: 'minuto', value: 60 * 1000 }
+    ];
+
+    for (const unit of units) {
+        const amount = Math.floor(diffMs / unit.value);
+        if (amount >= 1) {
+            return `${amount} ${unit.label}${amount === 1 ? '' : 's'}`;
+        }
+    }
+
+    const seconds = Math.max(1, Math.floor(diffMs / 1000));
+    return `${seconds} segundo${seconds === 1 ? '' : 's'}`;
 }

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard — ModBot</title>
-    <meta name="description" content="Panel de administración de ModBot. Gestiona advertencias, configura logs y controla tu servidor de Discord desde el navegador.">
+    <meta name="description" content="Panel de administración de ModBot. Gestiona advertencias, logs, apariencia, permisos y el nuevo sistema anti-raid desde el navegador.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -89,6 +89,10 @@
                     <button class="nav-item" data-view="config" id="navConfig">
                         <span class="nav-icon">⚙️</span>
                         <span>Configuración</span>
+                    </button>
+                    <button class="nav-item" data-view="antiraid" id="navAntiRaid">
+                        <span class="nav-icon">🛡️</span>
+                        <span>Anti-Raid</span>
                     </button>
                     <button class="nav-item" data-view="permissions" id="navPermissions">
                         <span class="nav-icon">🛂</span>
@@ -177,6 +181,28 @@
                             <div class="config-info">
                                 <span class="config-label">Canal de logs</span>
                                 <span class="config-desc" id="quickLogChannel">—</span>
+                            </div>
+                        </div>
+                        <div class="config-item">
+                            <div class="config-info">
+                                <span class="config-label">Anti-Raid</span>
+                                <span class="config-desc" id="quickAntiRaidStatus">—</span>
+                            </div>
+                            <label class="toggle" id="quickToggleAntiRaid">
+                                <input type="checkbox" id="quickAntiRaidCheckbox">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="config-item">
+                            <div class="config-info">
+                                <span class="config-label">Nivel activo</span>
+                                <span class="config-desc" id="quickAntiRaidLevel">—</span>
+                            </div>
+                        </div>
+                        <div class="config-item">
+                            <div class="config-info">
+                                <span class="config-label">Estado Panic</span>
+                                <span class="config-desc" id="quickAntiRaidPanic">—</span>
                             </div>
                         </div>
                     </div>
@@ -276,6 +302,276 @@
                     </div>
                 </div>
 
+            </div>
+
+            <!-- Anti-Raid View -->
+            <div class="view" id="view-antiraid" style="display: none;">
+                <div class="view-header">
+                    <h1 class="view-title">🛡️ Anti-Raid</h1>
+                    <p class="view-subtitle">Configura defensa por niveles, umbrales de spam y retorno automático/manual de Panic.</p>
+                </div>
+
+                <div class="stats-row stats-row-compact">
+                    <div class="stat-card">
+                        <span class="stat-icon">🔌</span>
+                        <div class="stat-data">
+                            <span class="stat-number stat-number-small" id="antiRaidEnabledStat">—</span>
+                            <span class="stat-label">Sistema</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-icon">🎚️</span>
+                        <div class="stat-data">
+                            <span class="stat-number stat-number-small" id="antiRaidBaseLevelStat">—</span>
+                            <span class="stat-label">Nivel base</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-icon">🧱</span>
+                        <div class="stat-data">
+                            <span class="stat-number stat-number-small" id="antiRaidCurrentLevelStat">—</span>
+                            <span class="stat-label">Nivel actual</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-icon">🚨</span>
+                        <div class="stat-data">
+                            <span class="stat-number stat-number-small" id="antiRaidPanicStat">—</span>
+                            <span class="stat-label">Panic</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header-inline">
+                        <div>
+                            <h3 class="card-title">Control rápido</h3>
+                            <p class="card-subtitle">Activa el sistema, define el nivel base y fuerza acciones manuales si el servidor entra en alerta.</p>
+                        </div>
+                        <span class="inline-badge" id="antiRaidCurrentBadge">—</span>
+                    </div>
+                    <div class="config-form stacked-form">
+                        <div class="info-banner">
+                            <strong>Preset recomendado:</strong> empieza con <strong>Monitor</strong>, valida logs unos días y luego sube a <strong>Clean</strong> o <strong>Contain</strong>.
+                        </div>
+                        <div class="form-grid two-columns">
+                            <div class="config-item compact-item">
+                                <div class="config-info">
+                                    <span class="config-label">Sistema activo</span>
+                                    <span class="config-desc">Activa o apaga la capa anti-raid para este servidor.</span>
+                                </div>
+                                <label class="toggle">
+                                    <input type="checkbox" id="antiRaidEnabled">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label" for="antiRaidBaseLevel">Nivel base</label>
+                                <select id="antiRaidBaseLevel" class="config-select">
+                                    <option value="1">Monitor</option>
+                                    <option value="2">Clean</option>
+                                    <option value="3">Contain</option>
+                                </select>
+                                <span class="field-help">El nivel al que vuelve el sistema cuando termina Panic.</span>
+                            </div>
+                        </div>
+                        <div class="form-grid two-columns">
+                            <div class="field-group">
+                                <label class="field-label" for="antiRaidPanicMinutes">Duración Panic</label>
+                                <input type="number" id="antiRaidPanicMinutes" class="config-input full-width" min="1" max="1440" placeholder="15">
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label" for="antiRaidPanicStrictPercent">Panic strict %</label>
+                                <input type="number" id="antiRaidPanicStrictPercent" class="config-input full-width" min="30" max="100" placeholder="70">
+                                <span class="field-help">Cuanto más bajo, más rápido salta la detección durante Panic.</span>
+                            </div>
+                        </div>
+                        <div class="form-grid two-columns">
+                            <div class="field-group">
+                                <label class="field-label" for="antiRaidActionReason">Motivo para acciones manuales</label>
+                                <input type="text" id="antiRaidActionReason" class="config-input full-width" placeholder="Raid activo, pruebas o normalización manual">
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label" for="antiRaidManualPanicMinutes">Panic manual (minutos)</label>
+                                <input type="number" id="antiRaidManualPanicMinutes" class="config-input full-width" min="1" max="1440" placeholder="15">
+                            </div>
+                        </div>
+                        <div class="config-actions wrap-actions">
+                            <button class="btn btn-secondary" id="antiRaidPanicBtn">🚨 Activar Panic</button>
+                            <button class="btn btn-secondary" id="antiRaidNormalizeBtn">🟢 Volver al nivel base</button>
+                            <span class="save-status" id="antiRaidActionStatus"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header-inline">
+                        <div>
+                            <h3 class="card-title">Detección de mensajes</h3>
+                            <p class="card-subtitle">Configura flood, duplicados y menciones abusivas.</p>
+                        </div>
+                    </div>
+                    <div class="config-form stacked-form">
+                        <div class="form-grid three-columns">
+                            <div class="field-group">
+                                <label class="field-label" for="antiRaidMessageEnabled">Flood</label>
+                                <select id="antiRaidMessageEnabled" class="config-select">
+                                    <option value="true">Activado</option>
+                                    <option value="false">Desactivado</option>
+                                </select>
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label" for="antiRaidMaxMessages">Máx. mensajes</label>
+                                <input type="number" id="antiRaidMaxMessages" class="config-input full-width" min="3" max="20">
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label" for="antiRaidMessageWindow">Ventana (s)</label>
+                                <input type="number" id="antiRaidMessageWindow" class="config-input full-width" min="3" max="60">
+                            </div>
+                        </div>
+                        <div class="form-grid three-columns">
+                            <div class="field-group">
+                                <label class="field-label" for="antiRaidMessageTimeout">Timeout flood (m)</label>
+                                <input type="number" id="antiRaidMessageTimeout" class="config-input full-width" min="1" max="1440">
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label" for="antiRaidDuplicateEnabled">Duplicados</label>
+                                <select id="antiRaidDuplicateEnabled" class="config-select">
+                                    <option value="true">Activado</option>
+                                    <option value="false">Desactivado</option>
+                                </select>
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label" for="antiRaidMaxDuplicates">Máx. duplicados</label>
+                                <input type="number" id="antiRaidMaxDuplicates" class="config-input full-width" min="2" max="10">
+                            </div>
+                        </div>
+                        <div class="form-grid three-columns">
+                            <div class="field-group">
+                                <label class="field-label" for="antiRaidDuplicateWindow">Ventana duplicados (s)</label>
+                                <input type="number" id="antiRaidDuplicateWindow" class="config-input full-width" min="5" max="120">
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label" for="antiRaidDuplicateTimeout">Timeout duplicados (m)</label>
+                                <input type="number" id="antiRaidDuplicateTimeout" class="config-input full-width" min="1" max="1440">
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label" for="antiRaidMentionEnabled">Menciones</label>
+                                <select id="antiRaidMentionEnabled" class="config-select">
+                                    <option value="true">Activado</option>
+                                    <option value="false">Desactivado</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-grid three-columns">
+                            <div class="field-group">
+                                <label class="field-label" for="antiRaidMaxMentions">Máx. menciones</label>
+                                <input type="number" id="antiRaidMaxMentions" class="config-input full-width" min="2" max="20">
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label" for="antiRaidMentionTimeout">Timeout menciones (m)</label>
+                                <input type="number" id="antiRaidMentionTimeout" class="config-input full-width" min="1" max="1440">
+                            </div>
+                            <div class="config-item compact-item field-card">
+                                <div class="config-info">
+                                    <span class="config-label">Bloquear @everyone/@here</span>
+                                    <span class="config-desc">Corta menciones globales aunque no haya flood.</span>
+                                </div>
+                                <label class="toggle">
+                                    <input type="checkbox" id="antiRaidBlockEveryone">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header-inline">
+                        <div>
+                            <h3 class="card-title">Join raids y cuentas nuevas</h3>
+                            <p class="card-subtitle">Define cuándo el sistema entra en alerta y cómo trata cuentas nuevas durante actividad sospechosa.</p>
+                        </div>
+                    </div>
+                    <div class="config-form stacked-form">
+                        <div class="form-grid three-columns">
+                            <div class="field-group">
+                                <label class="field-label" for="antiRaidJoinEnabled">Protección de joins</label>
+                                <select id="antiRaidJoinEnabled" class="config-select">
+                                    <option value="true">Activado</option>
+                                    <option value="false">Desactivado</option>
+                                </select>
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label" for="antiRaidWarningJoins">Joins de alerta</label>
+                                <input type="number" id="antiRaidWarningJoins" class="config-input full-width" min="3" max="50">
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label" for="antiRaidDangerJoins">Joins para Panic</label>
+                                <input type="number" id="antiRaidDangerJoins" class="config-input full-width" min="4" max="100">
+                            </div>
+                        </div>
+                        <div class="form-grid three-columns">
+                            <div class="field-group">
+                                <label class="field-label" for="antiRaidJoinWindow">Ventana joins (s)</label>
+                                <input type="number" id="antiRaidJoinWindow" class="config-input full-width" min="10" max="300">
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label" for="antiRaidNewAccountDays">Cuenta nueva (días)</label>
+                                <input type="number" id="antiRaidNewAccountDays" class="config-input full-width" min="1" max="90">
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label" for="antiRaidSuspiciousTimeout">Timeout cuenta nueva (m)</label>
+                                <input type="number" id="antiRaidSuspiciousTimeout" class="config-input full-width" min="1" max="1440">
+                            </div>
+                        </div>
+                        <div class="form-grid two-columns">
+                            <div class="config-item compact-item">
+                                <div class="config-info">
+                                    <span class="config-label">Auto Panic</span>
+                                    <span class="config-desc">Activa Panic automáticamente si la oleada de joins supera el umbral grave.</span>
+                                </div>
+                                <label class="toggle">
+                                    <input type="checkbox" id="antiRaidAutoPanic">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="info-banner">
+                                <strong>Retorno automático:</strong> cuando Panic expira, el sistema vuelve solo al nivel base y registra el cambio en logs.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header-inline">
+                        <div>
+                            <h3 class="card-title">Whitelist</h3>
+                            <p class="card-subtitle">Excluye usuarios, roles o canales para reducir falsos positivos en zonas sensibles.</p>
+                        </div>
+                    </div>
+                    <div class="config-form stacked-form">
+                        <div class="form-grid two-columns">
+                            <div class="field-group">
+                                <label class="field-label" for="antiRaidWhitelistRoles">Roles excluidos</label>
+                                <select id="antiRaidWhitelistRoles" class="config-select multi-select" multiple></select>
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label" for="antiRaidWhitelistChannels">Canales excluidos</label>
+                                <select id="antiRaidWhitelistChannels" class="config-select multi-select" multiple></select>
+                            </div>
+                        </div>
+                        <div class="field-group">
+                            <label class="field-label" for="antiRaidWhitelistUsers">Usuarios excluidos por ID</label>
+                            <textarea id="antiRaidWhitelistUsers" class="config-textarea" rows="4" placeholder="Pega IDs separados por coma, espacio o salto de línea"></textarea>
+                            <span class="field-help">Útil para propietarios, bots internos o cuentas de prueba.</span>
+                        </div>
+                        <div class="config-actions">
+                            <button class="btn btn-primary" id="saveAntiRaidBtn">💾 Guardar anti-raid</button>
+                            <span class="save-status" id="antiRaidSaveStatus"></span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Permissions View -->

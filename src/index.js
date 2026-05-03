@@ -10,6 +10,7 @@ import { loadTickets } from './utils/ticketStore.js';
 import { loadWarnings } from './utils/warnings.js';
 import { loadTempBans, startTempBanChecker } from './utils/tempbans.js';
 import { loadUsers } from './utils/users.js';
+import { startAntiRaidWatcher } from './utils/antiRaid.js';
 import { startWebServer } from './web/server.js';
 
 config();
@@ -71,6 +72,7 @@ client.once(Events.ClientReady, async () => {
 
     // Start systems
     startTempBanChecker(client);
+    startAntiRaidWatcher(client);
     startWebServer(client);
 });
 

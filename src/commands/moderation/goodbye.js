@@ -1,7 +1,7 @@
 import { EmbedBuilder } from 'discord.js';
 import { sendLog } from '../../utils/embeds.js';
 import { getGoodbyeConfig, setGoodbyeEnabled, setGoodbyeChannel, setGoodbyeMessage, setGoodbyeBackground } from '../../utils/config.js';
-import { generateCard } from '../../utils/welcomeCard.js';
+import { generateCard, replaceMemberPlaceholders } from '../../utils/welcomeCard.js';
 
 export const command = {
     name: 'goodbye',
@@ -34,13 +34,13 @@ export const command = {
         },
         {
             name: 'message',
-            description: 'Cambiar el mensaje de despedida. Variables: {user} {server} {count}',
+            description: 'Cambiar el mensaje de despedida. Variables: {user} {displayName} {username} {server} {count} {tenure} {joined}',
             type: 1,
             options: [
                 {
                     name: 'texto',
                     type: 3,
-                    description: 'Nuevo mensaje. Usa {user}, {server}, {count}',
+                    description: 'Nuevo mensaje. Usa {user}, {displayName}, {username}, {server}, {count}, {tenure}, {joined}',
                     required: true
                 }
             ]
@@ -161,10 +161,7 @@ export const command = {
                 const config = getGoodbyeConfig(guildId);
                 const attachment = await generateCard(interaction.member, 'goodbye', config);
                 let message = config.message || '**{user}** ha abandonado **{server}** 😢';
-                message = message
-                    .replace(/{user}/gi, interaction.user.username)
-                    .replace(/{server}/gi, interaction.guild.name)
-                    .replace(/{count}/gi, interaction.guild.memberCount.toString());
+                message = replaceMemberPlaceholders(message, interaction.member);
                 await interaction.editReply({ content: `🧪 **Vista previa de despedida:**\n${message}`, files: [attachment] });
                 break;
             }
@@ -179,7 +176,7 @@ export const command = {
                         { name: 'Fondo', value: config.backgroundUrl ? '[Imagen personalizada]' : 'Predeterminado', inline: true },
                         { name: 'Mensaje', value: config.message || '(predeterminado)' }
                     )
-                    .setFooter({ text: 'Variables disponibles: {user}, {server}, {count}' })
+                    .setFooter({ text: 'Variables: {user}, {displayName}, {username}, {server}, {count}, {tenure}, {joined}' })
                     .setTimestamp();
                 await interaction.reply({ embeds: [embed] });
                 break;

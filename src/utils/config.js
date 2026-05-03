@@ -68,6 +68,50 @@ function createDefaultAppearanceConfig() {
     };
 }
 
+function createDefaultAntiRaidConfig() {
+    return {
+        enabled: false,
+        baseLevel: 1,
+        currentLevel: 0,
+        panicUntil: null,
+        panicReason: null,
+        whitelistUserIds: [],
+        whitelistRoleIds: [],
+        whitelistChannelIds: [],
+        messageSpam: {
+            enabled: true,
+            maxMessages: 6,
+            intervalSeconds: 8,
+            timeoutMinutes: 10
+        },
+        duplicateSpam: {
+            enabled: true,
+            maxDuplicates: 3,
+            intervalSeconds: 15,
+            timeoutMinutes: 15
+        },
+        mentionSpam: {
+            enabled: true,
+            maxMentions: 5,
+            blockEveryone: true,
+            timeoutMinutes: 20
+        },
+        joinRaid: {
+            enabled: true,
+            warningJoins: 6,
+            dangerJoins: 10,
+            intervalSeconds: 30,
+            newAccountDays: 7,
+            suspiciousTimeoutMinutes: 30
+        },
+        panic: {
+            autoActivateOnDanger: true,
+            autoNormalizeMinutes: 15,
+            messageMultiplierPercent: 70
+        }
+    };
+}
+
 export function createDefaultCommandPermissionRule() {
     return {
         enabled: true,
@@ -96,6 +140,77 @@ function normalizeCommandPermissionRule(rule = {}) {
         allowedChannelIds: normalizeIdList(rule.allowedChannelIds),
         blockedChannelIds: normalizeIdList(rule.blockedChannelIds)
     };
+}
+
+function clampInteger(value, min, max, fallback) {
+    const parsed = Number(value);
+    if (!Number.isInteger(parsed)) return fallback;
+    return Math.min(max, Math.max(min, parsed));
+}
+
+function normalizeAntiRaidConfig(section = {}) {
+    const defaults = createDefaultAntiRaidConfig();
+    const normalized = {
+        enabled: typeof section.enabled === 'boolean' ? section.enabled : defaults.enabled,
+        baseLevel: clampInteger(section.baseLevel, 1, 3, defaults.baseLevel),
+        currentLevel: clampInteger(section.currentLevel, 0, 4, defaults.currentLevel),
+        panicUntil: Number.isFinite(Number(section.panicUntil)) ? Number(section.panicUntil) : null,
+        panicReason: typeof section.panicReason === 'string' && section.panicReason.trim()
+            ? section.panicReason.trim().slice(0, 200)
+            : null,
+        whitelistUserIds: normalizeIdList(section.whitelistUserIds),
+        whitelistRoleIds: normalizeIdList(section.whitelistRoleIds),
+        whitelistChannelIds: normalizeIdList(section.whitelistChannelIds),
+        messageSpam: {
+            enabled: typeof section.messageSpam?.enabled === 'boolean' ? section.messageSpam.enabled : defaults.messageSpam.enabled,
+            maxMessages: clampInteger(section.messageSpam?.maxMessages, 3, 20, defaults.messageSpam.maxMessages),
+            intervalSeconds: clampInteger(section.messageSpam?.intervalSeconds, 3, 60, defaults.messageSpam.intervalSeconds),
+            timeoutMinutes: clampInteger(section.messageSpam?.timeoutMinutes, 1, 1440, defaults.messageSpam.timeoutMinutes)
+        },
+        duplicateSpam: {
+            enabled: typeof section.duplicateSpam?.enabled === 'boolean' ? section.duplicateSpam.enabled : defaults.duplicateSpam.enabled,
+            maxDuplicates: clampInteger(section.duplicateSpam?.maxDuplicates, 2, 10, defaults.duplicateSpam.maxDuplicates),
+            intervalSeconds: clampInteger(section.duplicateSpam?.intervalSeconds, 5, 120, defaults.duplicateSpam.intervalSeconds),
+            timeoutMinutes: clampInteger(section.duplicateSpam?.timeoutMinutes, 1, 1440, defaults.duplicateSpam.timeoutMinutes)
+        },
+        mentionSpam: {
+            enabled: typeof section.mentionSpam?.enabled === 'boolean' ? section.mentionSpam.enabled : defaults.mentionSpam.enabled,
+            maxMentions: clampInteger(section.mentionSpam?.maxMentions, 2, 20, defaults.mentionSpam.maxMentions),
+            blockEveryone: typeof section.mentionSpam?.blockEveryone === 'boolean' ? section.mentionSpam.blockEveryone : defaults.mentionSpam.blockEveryone,
+            timeoutMinutes: clampInteger(section.mentionSpam?.timeoutMinutes, 1, 1440, defaults.mentionSpam.timeoutMinutes)
+        },
+        joinRaid: {
+            enabled: typeof section.joinRaid?.enabled === 'boolean' ? section.joinRaid.enabled : defaults.joinRaid.enabled,
+            warningJoins: clampInteger(section.joinRaid?.warningJoins, 3, 50, defaults.joinRaid.warningJoins),
+            dangerJoins: clampInteger(section.joinRaid?.dangerJoins, 4, 100, defaults.joinRaid.dangerJoins),
+            intervalSeconds: clampInteger(section.joinRaid?.intervalSeconds, 10, 300, defaults.joinRaid.intervalSeconds),
+            newAccountDays: clampInteger(section.joinRaid?.newAccountDays, 1, 90, defaults.joinRaid.newAccountDays),
+            suspiciousTimeoutMinutes: clampInteger(section.joinRaid?.suspiciousTimeoutMinutes, 1, 1440, defaults.joinRaid.suspiciousTimeoutMinutes)
+        },
+        panic: {
+            autoActivateOnDanger: typeof section.panic?.autoActivateOnDanger === 'boolean' ? section.panic.autoActivateOnDanger : defaults.panic.autoActivateOnDanger,
+            autoNormalizeMinutes: clampInteger(section.panic?.autoNormalizeMinutes, 1, 1440, defaults.panic.autoNormalizeMinutes),
+            messageMultiplierPercent: clampInteger(section.panic?.messageMultiplierPercent, 30, 100, defaults.panic.messageMultiplierPercent)
+        }
+    };
+
+    if (normalized.joinRaid.dangerJoins <= normalized.joinRaid.warningJoins) {
+        normalized.joinRaid.dangerJoins = Math.min(100, normalized.joinRaid.warningJoins + 1);
+    }
+
+    if (!normalized.enabled) {
+        normalized.currentLevel = 0;
+        normalized.panicUntil = null;
+        normalized.panicReason = null;
+    } else if (normalized.panicUntil && normalized.currentLevel !== 4) {
+        normalized.currentLevel = 4;
+    } else if (!normalized.panicUntil && normalized.currentLevel === 4) {
+        normalized.currentLevel = normalized.baseLevel;
+    } else if (normalized.currentLevel === 0) {
+        normalized.currentLevel = normalized.baseLevel;
+    }
+
+    return normalized;
 }
 
 function hasCustomCommandPermissionRule(rule) {
@@ -134,6 +249,7 @@ function getGuildConfig(guildId) {
                 channelId: null
             },
             appearance: createDefaultAppearanceConfig(),
+            antiRaid: createDefaultAntiRaidConfig(),
             commandPermissions: {}
         };
     }
@@ -167,6 +283,10 @@ function getGuildConfig(guildId) {
         ...createDefaultAppearanceConfig(),
         ...config.guilds[guildId].appearance
     };
+    config.guilds[guildId].antiRaid = normalizeAntiRaidConfig({
+        ...createDefaultAntiRaidConfig(),
+        ...config.guilds[guildId].antiRaid
+    });
     if (!config.guilds[guildId].commandPermissions || typeof config.guilds[guildId].commandPermissions !== 'object' || Array.isArray(config.guilds[guildId].commandPermissions)) {
         config.guilds[guildId].commandPermissions = {};
     } else {
@@ -374,6 +494,45 @@ export function updateAppearanceConfig(guildId, updates) {
     };
     saveConfig();
     return gc.appearance;
+}
+
+// ── Anti-Raid ──
+export function getAntiRaidConfig(guildId) {
+    return getGuildConfig(guildId).antiRaid;
+}
+
+export function updateAntiRaidConfig(guildId, updates) {
+    const gc = getGuildConfig(guildId);
+    const current = gc.antiRaid || createDefaultAntiRaidConfig();
+    const nextUpdates = updates || {};
+
+    gc.antiRaid = normalizeAntiRaidConfig({
+        ...current,
+        ...nextUpdates,
+        messageSpam: {
+            ...current.messageSpam,
+            ...(nextUpdates.messageSpam || {})
+        },
+        duplicateSpam: {
+            ...current.duplicateSpam,
+            ...(nextUpdates.duplicateSpam || {})
+        },
+        mentionSpam: {
+            ...current.mentionSpam,
+            ...(nextUpdates.mentionSpam || {})
+        },
+        joinRaid: {
+            ...current.joinRaid,
+            ...(nextUpdates.joinRaid || {})
+        },
+        panic: {
+            ...current.panic,
+            ...(nextUpdates.panic || {})
+        }
+    });
+
+    saveConfig();
+    return gc.antiRaid;
 }
 
 // ── Command permissions ──
