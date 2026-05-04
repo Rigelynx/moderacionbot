@@ -7,9 +7,16 @@ import {
     handleTicketTypeSelect,
     getTicketButtonIds
 } from '../utils/ticketCore.js';
+import {
+    handleAntiRaidButton,
+    handleAntiRaidModal,
+    handleAntiRaidSelect
+} from '../utils/antiRaid.js';
+import { getVerificationButtonId, handleVerificationButton } from '../utils/verification.js';
 import { checkCommandAccess } from '../utils/commandPermissions.js';
 
 const ticketButtons = getTicketButtonIds();
+const verificationButtonId = getVerificationButtonId();
 
 export default {
     name: 'interactionCreate',
@@ -18,6 +25,12 @@ export default {
     async execute(interaction, client) {
         if (interaction.isButton()) {
             try {
+                if (interaction.customId.startsWith('antiRaid:')) {
+                    return await handleAntiRaidButton(interaction, client);
+                }
+                if (interaction.customId === verificationButtonId) {
+                    return await handleVerificationButton(interaction);
+                }
                 if (interaction.customId === ticketButtons.create) {
                     return await handleTicketCreate(interaction);
                 }
@@ -31,7 +44,9 @@ export default {
                 console.error(`Error procesando botón ${interaction.customId}:`, error);
                 
                 const content = '❌ Hubo un error al procesar esta acción.';
-                if (interaction.replied || interaction.deferred) {
+                if (interaction.deferred && !interaction.replied) {
+                    await interaction.editReply({ content }).catch(() => {});
+                } else if (interaction.replied) {
                     await interaction.followUp({ content, flags: 64 }).catch(() => {});
                 } else {
                     await interaction.reply({ content, flags: 64 }).catch(() => {});
@@ -40,8 +55,16 @@ export default {
             }
         }
 
-        if (interaction.isStringSelectMenu()) {
+        if (
+            interaction.isStringSelectMenu() ||
+            interaction.isRoleSelectMenu() ||
+            interaction.isChannelSelectMenu() ||
+            interaction.isUserSelectMenu()
+        ) {
             try {
+                if (interaction.customId.startsWith('antiRaid:')) {
+                    return await handleAntiRaidSelect(interaction, client);
+                }
                 if (interaction.customId === ticketButtons.typeSelect) {
                     return await handleTicketTypeSelect(interaction);
                 }
@@ -49,7 +72,9 @@ export default {
                 console.error(`Error procesando select ${interaction.customId}:`, error);
 
                 const content = '❌ Hubo un error al procesar esta selección.';
-                if (interaction.replied || interaction.deferred) {
+                if (interaction.deferred && !interaction.replied) {
+                    await interaction.editReply({ content }).catch(() => {});
+                } else if (interaction.replied) {
                     await interaction.followUp({ content, flags: 64 }).catch(() => {});
                 } else {
                     await interaction.reply({ content, flags: 64 }).catch(() => {});
@@ -60,6 +85,9 @@ export default {
 
         if (interaction.isModalSubmit()) {
             try {
+                if (interaction.customId.startsWith('antiRaid:')) {
+                    return await handleAntiRaidModal(interaction, client);
+                }
                 if (interaction.customId.startsWith(`${ticketButtons.createModalPrefix}:`)) {
                     return await handleTicketCreateModal(interaction);
                 }
@@ -70,7 +98,9 @@ export default {
                 console.error(`Error procesando modal ${interaction.customId}:`, error);
 
                 const content = '❌ Hubo un error al procesar el formulario.';
-                if (interaction.replied || interaction.deferred) {
+                if (interaction.deferred && !interaction.replied) {
+                    await interaction.editReply({ content }).catch(() => {});
+                } else if (interaction.replied) {
                     await interaction.followUp({ content, flags: 64 }).catch(() => {});
                 } else {
                     await interaction.reply({ content, flags: 64 }).catch(() => {});
@@ -86,6 +116,12 @@ export default {
 
         const commandAccess = checkCommandAccess(interaction, interaction.commandName);
         if (!commandAccess.allowed) {
+            if (interaction.deferred) {
+                return interaction.editReply({
+                    content: commandAccess.reason
+                }).catch(() => {});
+            }
+
             return interaction.reply({
                 content: commandAccess.reason,
                 flags: 64
@@ -93,6 +129,10 @@ export default {
         }
 
         try {
+            if (interaction.commandName === 'ticket' && !interaction.deferred && !interaction.replied) {
+                await interaction.deferReply({ flags: 64 });
+            }
+
             await command.execute(interaction, client);
         } catch (error) {
             console.error(`Error ejecutando slash command ${interaction.commandName}:`, error);
@@ -101,7 +141,9 @@ export default {
             const options = { content, flags: 64 };
 
             try {
-                if (interaction.replied || interaction.deferred) {
+                if (interaction.deferred && !interaction.replied) {
+                    await interaction.editReply({ content });
+                } else if (interaction.replied) {
                     await interaction.followUp(options);
                 } else {
                     await interaction.reply(options);

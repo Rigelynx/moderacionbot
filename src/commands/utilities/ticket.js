@@ -12,6 +12,8 @@ import {
     getPriorityLabel,
     handleTicketAdd,
     handleTicketAssign,
+    handleTicketAiReply,
+    handleTicketAiSummary,
     handleTicketClaim,
     handleTicketClose,
     handleTicketPriority,
@@ -76,6 +78,25 @@ function formatTypesList(types) {
         .map((type, index) => `${index === 0 ? '⭐ ' : ''}${type.emoji || '🎫'} \`${type.key}\` · **${type.label}** · ${getPriorityLabel(type.priority)} · ${type.staffRoleId ? `<@&${type.staffRoleId}>` : 'Rol global'}`)
         .join('\n')
         .slice(0, 1024);
+}
+
+function stripReplyFlags(payload = {}) {
+    const nextPayload = { ...payload };
+    delete nextPayload.flags;
+    delete nextPayload.ephemeral;
+    return nextPayload;
+}
+
+async function respondToTicketCommand(interaction, payload) {
+    if (interaction.deferred && !interaction.replied) {
+        return interaction.editReply(stripReplyFlags(payload));
+    }
+
+    if (interaction.replied) {
+        return interaction.followUp(payload);
+    }
+
+    return interaction.reply(payload);
 }
 
 export const command = {
@@ -225,6 +246,19 @@ export const command = {
             ]
         },
         {
+            name: 'ia_resumen',
+            description: 'Genera un resumen IA del ticket actual para staff',
+            type: ApplicationCommandOptionType.Subcommand
+        },
+        {
+            name: 'ia_respuesta',
+            description: 'Genera respuestas sugeridas por IA para el ticket actual',
+            type: ApplicationCommandOptionType.Subcommand,
+            options: [
+                { name: 'contexto', description: 'Contexto extra para orientar la sugerencia', type: ApplicationCommandOptionType.String, required: false }
+            ]
+        },
+        {
             name: 'close',
             description: 'Cierra el ticket actual y genera transcript',
             type: ApplicationCommandOptionType.Subcommand,
@@ -241,7 +275,7 @@ export const command = {
         const currentConfig = getTicketsConfig(guildId);
 
         if (['setup', 'status', 'config', 'panel', 'mensaje', 'tipos', 'tipo_add', 'tipo_edit', 'tipo_remove'].includes(subcommand) && !isGuildManager(interaction.member)) {
-            return interaction.reply({
+            return respondToTicketCommand(interaction, {
                 content: '❌ Solo los administradores del servidor pueden usar esta parte del sistema de tickets.',
                 flags: 64
             });
@@ -249,17 +283,15 @@ export const command = {
 
         if (subcommand === 'setup') {
             if (!currentConfig.categoryId) {
-                return interaction.reply({
+                return respondToTicketCommand(interaction, {
                     content: '❌ Configura primero la categoria con `/ticket config categoria:#categoria`.',
                     flags: 64
                 });
             }
 
-            await interaction.deferReply({ flags: 64 });
-
             const targetChannel = interaction.options.getChannel('canal') || interaction.channel;
             if (targetChannel.type !== ChannelType.GuildText) {
-                return interaction.editReply({
+                return respondToTicketCommand(interaction, {
                     content: '❌ El panel solo puede publicarse en canales de texto normales.'
                 });
             }
@@ -289,7 +321,7 @@ export const command = {
                 panelMessageId: panelMessage.id
             });
 
-            return interaction.editReply({
+            return respondToTicketCommand(interaction, {
                 content: `✅ Panel de tickets publicado en ${targetChannel}.`
             });
         }
@@ -321,7 +353,7 @@ export const command = {
                 )
                 .setTimestamp();
 
-            return interaction.reply({ embeds: [embed], flags: 64 });
+            return respondToTicketCommand(interaction, { embeds: [embed], flags: 64 });
         }
 
         if (subcommand === 'config') {
@@ -346,7 +378,7 @@ export const command = {
             if (typeof closeReasonRequired === 'boolean') updates.closeReasonRequired = closeReasonRequired;
 
             if (Object.keys(updates).length === 0) {
-                return interaction.reply({
+                return respondToTicketCommand(interaction, {
                     content: '❌ Debes indicar al menos un ajuste para actualizar.',
                     flags: 64
                 });
@@ -369,7 +401,7 @@ export const command = {
                 )
                 .setTimestamp();
 
-            return interaction.reply({ embeds: [embed], flags: 64 });
+            return respondToTicketCommand(interaction, { embeds: [embed], flags: 64 });
         }
 
         if (subcommand === 'panel') {
@@ -388,7 +420,7 @@ export const command = {
             if (emoji) updates.panelButtonEmoji = emoji.trim();
 
             if (Object.keys(updates).length === 0) {
-                return interaction.reply({
+                return respondToTicketCommand(interaction, {
                     content: '❌ Debes indicar al menos un cambio para el panel.',
                     flags: 64
                 });
@@ -408,7 +440,7 @@ export const command = {
                 )
                 .setTimestamp();
 
-            return interaction.reply({ embeds: [embed], flags: 64 });
+            return respondToTicketCommand(interaction, { embeds: [embed], flags: 64 });
         }
 
         if (subcommand === 'mensaje') {
@@ -425,7 +457,7 @@ export const command = {
                 })
                 .setTimestamp();
 
-            return interaction.reply({ embeds: [embed], flags: 64 });
+            return respondToTicketCommand(interaction, { embeds: [embed], flags: 64 });
         }
 
         if (subcommand === 'tipos') {
@@ -440,13 +472,13 @@ export const command = {
                 })
                 .setTimestamp();
 
-            return interaction.reply({ embeds: [embed], flags: 64 });
+            return respondToTicketCommand(interaction, { embeds: [embed], flags: 64 });
         }
 
         if (subcommand === 'tipo_add') {
             const currentTypes = getTicketTypes(currentConfig);
             if (currentTypes.length >= 10) {
-                return interaction.reply({
+                return respondToTicketCommand(interaction, {
                     content: '❌ Alcanzaste el limite de 10 tipos de ticket.',
                     flags: 64
                 });
@@ -454,14 +486,14 @@ export const command = {
 
             const key = sanitizeTypeKey(interaction.options.getString('clave'));
             if (!key) {
-                return interaction.reply({
+                return respondToTicketCommand(interaction, {
                     content: '❌ La clave del tipo no es valida.',
                     flags: 64
                 });
             }
 
             if (currentTypes.some(type => type.key === key)) {
-                return interaction.reply({
+                return respondToTicketCommand(interaction, {
                     content: `❌ Ya existe un tipo con la clave \`${key}\`.`,
                     flags: 64
                 });
@@ -483,7 +515,7 @@ export const command = {
 
             updateTicketsConfig(guildId, { types: nextTypes });
 
-            return interaction.reply({
+            return respondToTicketCommand(interaction, {
                 content: `✅ Tipo \`${key}\` creado correctamente.`,
                 flags: 64
             });
@@ -495,7 +527,7 @@ export const command = {
             const index = currentTypes.findIndex(type => type.key === key);
 
             if (index === -1) {
-                return interaction.reply({
+                return respondToTicketCommand(interaction, {
                     content: `❌ No existe un tipo con la clave \`${key}\`.`,
                     flags: 64
                 });
@@ -518,7 +550,7 @@ export const command = {
             if (useGlobalRole) updates.staffRoleId = null;
 
             if (Object.keys(updates).length === 0 && !setDefault) {
-                return interaction.reply({
+                return respondToTicketCommand(interaction, {
                     content: '❌ Debes indicar al menos un cambio para editar el tipo.',
                     flags: 64
                 });
@@ -533,7 +565,7 @@ export const command = {
             const finalTypes = setDefault ? moveTypeToFront(nextTypes, key) : nextTypes;
             updateTicketsConfig(guildId, { types: finalTypes });
 
-            return interaction.reply({
+            return respondToTicketCommand(interaction, {
                 content: `✅ Tipo \`${key}\` actualizado correctamente.`,
                 flags: 64
             });
@@ -545,7 +577,7 @@ export const command = {
             const nextTypes = currentTypes.filter(type => type.key !== key);
 
             if (nextTypes.length === currentTypes.length) {
-                return interaction.reply({
+                return respondToTicketCommand(interaction, {
                     content: `❌ No existe un tipo con la clave \`${key}\`.`,
                     flags: 64
                 });
@@ -553,7 +585,7 @@ export const command = {
 
             updateTicketsConfig(guildId, { types: nextTypes });
 
-            return interaction.reply({
+            return respondToTicketCommand(interaction, {
                 content: `✅ Tipo \`${key}\` eliminado correctamente.`,
                 flags: 64
             });
@@ -581,6 +613,14 @@ export const command = {
 
         if (subcommand === 'remove') {
             return handleTicketRemove(interaction, interaction.options.getUser('usuario'));
+        }
+
+        if (subcommand === 'ia_resumen') {
+            return handleTicketAiSummary(interaction);
+        }
+
+        if (subcommand === 'ia_respuesta') {
+            return handleTicketAiReply(interaction, interaction.options.getString('contexto') || '');
         }
 
         if (subcommand === 'close') {

@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { randomBytes } from 'crypto';
 import { logInfo, logError } from '../../utils/logger.js';
 
 export function createAuthRouter(client) {
@@ -25,21 +26,39 @@ export function createAuthRouter(client) {
 
     // Redirect to Discord OAuth2
     router.get('/login', (req, res) => {
+        const state = randomBytes(24).toString('hex');
+        req.session.oauthState = state;
+
         const params = new URLSearchParams({
             client_id: CLIENT_ID,
             redirect_uri: REDIRECT_URI,
             response_type: 'code',
-            scope: 'identify guilds'
+            scope: 'identify guilds',
+            state
         });
-        res.redirect(`https://discord.com/api/oauth2/authorize?${params.toString()}`);
+
+        req.session.save((sessionError) => {
+            if (sessionError) {
+                logError(`Error guardando estado OAuth2: ${sessionError.message}`);
+                return res.redirect('/?error=session_failed');
+            }
+
+            res.redirect(`https://discord.com/api/oauth2/authorize?${params.toString()}`);
+        });
     });
 
     // OAuth2 callback
     router.get('/callback', async (req, res) => {
-        const { code } = req.query;
+        const { code, state } = req.query;
         if (!code) return res.redirect('/?error=no_code');
+        if (!state || state !== req.session.oauthState) {
+            delete req.session.oauthState;
+            return res.redirect('/?error=invalid_state');
+        }
 
         try {
+            delete req.session.oauthState;
+
             // Exchange code for token
             const tokenRes = await fetch('https://discord.com/api/oauth2/token', {
                 method: 'POST',

@@ -34,7 +34,7 @@ export const command = {
         },
         {
             name: 'message',
-            description: 'Cambiar el mensaje de despedida. Variables: {user} {displayName} {username} {server} {count} {tenure} {joined}',
+            description: 'Cambiar el mensaje de despedida. Ver variables en /goodbye status',
             type: 1,
             options: [
                 {

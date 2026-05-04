@@ -68,6 +68,19 @@ function createDefaultAppearanceConfig() {
     };
 }
 
+function createDefaultVerificationConfig() {
+    return {
+        enabled: false,
+        roleId: null,
+        panelChannelId: null,
+        panelMessageId: null,
+        minAccountAgeDays: 0,
+        panelTitle: 'Verificación del servidor',
+        panelDescription: 'Pulsa el botón para abrir la verificación web y obtener acceso completo al servidor.',
+        panelButtonLabel: 'Verificarme'
+    };
+}
+
 function createDefaultAntiRaidConfig() {
     return {
         enabled: false,
@@ -75,6 +88,8 @@ function createDefaultAntiRaidConfig() {
         currentLevel: 0,
         panicUntil: null,
         panicReason: null,
+        panelChannelId: null,
+        panelMessageId: null,
         whitelistUserIds: [],
         whitelistRoleIds: [],
         whitelistChannelIds: [],
@@ -108,6 +123,30 @@ function createDefaultAntiRaidConfig() {
             autoActivateOnDanger: true,
             autoNormalizeMinutes: 15,
             messageMultiplierPercent: 70
+        }
+    };
+}
+
+function createDefaultAiConfig() {
+    return {
+        enabled: false,
+        provider: 'openai',
+        model: 'gpt-5.4-mini',
+        ticketMode: 'manual',
+        moderationMode: 'assist',
+        antiRaidMode: 'assist',
+        maxRequestsPerHour: 100,
+        logPrompts: false,
+        features: {
+            ticketSummary: true,
+            ticketReplyAssist: false,
+            reportClassification: true,
+            smartModeration: false,
+            moderationExplanation: false,
+            moderationIncidentSummary: false,
+            smartAntiRaid: false,
+            antiRaidIncidentSummary: true,
+            fun8ball: true
         }
     };
 }
@@ -158,6 +197,8 @@ function normalizeAntiRaidConfig(section = {}) {
         panicReason: typeof section.panicReason === 'string' && section.panicReason.trim()
             ? section.panicReason.trim().slice(0, 200)
             : null,
+        panelChannelId: typeof section.panelChannelId === 'string' && section.panelChannelId.trim() ? section.panelChannelId.trim() : null,
+        panelMessageId: typeof section.panelMessageId === 'string' && section.panelMessageId.trim() ? section.panelMessageId.trim() : null,
         whitelistUserIds: normalizeIdList(section.whitelistUserIds),
         whitelistRoleIds: normalizeIdList(section.whitelistRoleIds),
         whitelistChannelIds: normalizeIdList(section.whitelistChannelIds),
@@ -213,6 +254,36 @@ function normalizeAntiRaidConfig(section = {}) {
     return normalized;
 }
 
+function normalizeChoice(value, allowedValues, fallback) {
+    return allowedValues.includes(value) ? value : fallback;
+}
+
+function normalizeAiConfig(section = {}) {
+    const defaults = createDefaultAiConfig();
+    const rawFeatures = section.features && typeof section.features === 'object' && !Array.isArray(section.features)
+        ? section.features
+        : {};
+    const features = {};
+
+    for (const [feature, defaultValue] of Object.entries(defaults.features)) {
+        features[feature] = typeof rawFeatures[feature] === 'boolean' ? rawFeatures[feature] : defaultValue;
+    }
+
+    return {
+        enabled: typeof section.enabled === 'boolean' ? section.enabled : defaults.enabled,
+        provider: normalizeChoice(section.provider, ['openai'], defaults.provider),
+        model: typeof section.model === 'string' && section.model.trim()
+            ? section.model.trim().slice(0, 80)
+            : defaults.model,
+        ticketMode: normalizeChoice(section.ticketMode, ['off', 'manual', 'auto'], defaults.ticketMode),
+        moderationMode: normalizeChoice(section.moderationMode, ['off', 'monitor', 'assist', 'soft-action'], defaults.moderationMode),
+        antiRaidMode: normalizeChoice(section.antiRaidMode, ['off', 'monitor', 'assist', 'adaptive'], defaults.antiRaidMode),
+        maxRequestsPerHour: clampInteger(section.maxRequestsPerHour, 1, 1000, defaults.maxRequestsPerHour),
+        logPrompts: typeof section.logPrompts === 'boolean' ? section.logPrompts : defaults.logPrompts,
+        features
+    };
+}
+
 function hasCustomCommandPermissionRule(rule) {
     if (!rule) return false;
 
@@ -249,7 +320,9 @@ function getGuildConfig(guildId) {
                 channelId: null
             },
             appearance: createDefaultAppearanceConfig(),
+            verification: createDefaultVerificationConfig(),
             antiRaid: createDefaultAntiRaidConfig(),
+            ai: createDefaultAiConfig(),
             commandPermissions: {}
         };
     }
@@ -283,9 +356,17 @@ function getGuildConfig(guildId) {
         ...createDefaultAppearanceConfig(),
         ...config.guilds[guildId].appearance
     };
+    config.guilds[guildId].verification = {
+        ...createDefaultVerificationConfig(),
+        ...config.guilds[guildId].verification
+    };
     config.guilds[guildId].antiRaid = normalizeAntiRaidConfig({
         ...createDefaultAntiRaidConfig(),
         ...config.guilds[guildId].antiRaid
+    });
+    config.guilds[guildId].ai = normalizeAiConfig({
+        ...createDefaultAiConfig(),
+        ...config.guilds[guildId].ai
     });
     if (!config.guilds[guildId].commandPermissions || typeof config.guilds[guildId].commandPermissions !== 'object' || Array.isArray(config.guilds[guildId].commandPermissions)) {
         config.guilds[guildId].commandPermissions = {};
@@ -496,6 +577,21 @@ export function updateAppearanceConfig(guildId, updates) {
     return gc.appearance;
 }
 
+// ── Verification ──
+export function getVerificationConfig(guildId) {
+    return getGuildConfig(guildId).verification;
+}
+
+export function updateVerificationConfig(guildId, updates) {
+    const gc = getGuildConfig(guildId);
+    gc.verification = {
+        ...gc.verification,
+        ...updates
+    };
+    saveConfig();
+    return gc.verification;
+}
+
 // ── Anti-Raid ──
 export function getAntiRaidConfig(guildId) {
     return getGuildConfig(guildId).antiRaid;
@@ -533,6 +629,29 @@ export function updateAntiRaidConfig(guildId, updates) {
 
     saveConfig();
     return gc.antiRaid;
+}
+
+// ── AI ──
+export function getAiConfig(guildId) {
+    return getGuildConfig(guildId).ai;
+}
+
+export function updateAiConfig(guildId, updates) {
+    const gc = getGuildConfig(guildId);
+    const current = gc.ai || createDefaultAiConfig();
+    const nextUpdates = updates || {};
+
+    gc.ai = normalizeAiConfig({
+        ...current,
+        ...nextUpdates,
+        features: {
+            ...current.features,
+            ...(nextUpdates.features || {})
+        }
+    });
+
+    saveConfig();
+    return gc.ai;
 }
 
 // ── Command permissions ──

@@ -15,16 +15,17 @@ export const command = {
         }
     ],
     async execute(interaction) {
+        const guildId = interaction.guild.id;
         const target = interaction.options.getUser('usuario') || interaction.user;
 
-        if (!isRegistered(target.id)) {
+        if (!isRegistered(guildId, target.id)) {
             const msg = target.id === interaction.user.id
                 ? '❌ No estás registrado. Usa `/register` para registrarte.'
                 : '❌ Este usuario no está registrado.';
             return interaction.reply({ content: msg, flags: 64 });
         }
 
-        const data = getUser(target.id);
+        const data = getUser(guildId, target.id);
         const appearance = getAppearanceConfig(interaction.guild.id);
         const profileCard = await generateProfileCard(target, data, interaction.guild, appearance);
 

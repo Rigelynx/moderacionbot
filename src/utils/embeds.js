@@ -17,11 +17,12 @@ export function createModerationEmbed({ color, title, user, moderator, fields = 
 }
 
 export async function sendLog(guild, content, client) {
-    if (!isLogsEnabled(guild.id)) return;
+    if (!isLogsEnabled(guild.id)) return false;
 
     const channelName = getLogChannelName(guild.id);
     const logChannel = guild.channels.cache.find(ch => ch.name === channelName);
-    if (logChannel) {
-        await logChannel.send(content).catch(() => {});
-    }
+    if (!logChannel) return false;
+
+    const sent = await logChannel.send(content).catch(() => null);
+    return Boolean(sent);
 }

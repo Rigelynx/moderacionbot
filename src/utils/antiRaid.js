@@ -1,4 +1,18 @@
-import { EmbedBuilder, PermissionFlagsBits } from 'discord.js';
+import {
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle,
+    ChannelSelectMenuBuilder,
+    ChannelType,
+    EmbedBuilder,
+    ModalBuilder,
+    PermissionFlagsBits,
+    RoleSelectMenuBuilder,
+    StringSelectMenuBuilder,
+    TextInputBuilder,
+    TextInputStyle,
+    UserSelectMenuBuilder
+} from 'discord.js';
 import { getAntiRaidConfig, updateAntiRaidConfig } from './config.js';
 import { sendLog } from './embeds.js';
 
@@ -24,6 +38,111 @@ const ANTI_RAID_LEVEL_LABELS = {
     [ANTI_RAID_LEVELS.CLEAN]: 'Clean',
     [ANTI_RAID_LEVELS.CONTAIN]: 'Contain',
     [ANTI_RAID_LEVELS.PANIC]: 'Panic'
+};
+
+const ANTI_RAID_PANEL_IDS = {
+    toggle: 'antiRaid:toggle',
+    panic: 'antiRaid:panic',
+    normalize: 'antiRaid:normalize',
+    refresh: 'antiRaid:refresh',
+    flood: 'antiRaid:flood',
+    mentions: 'antiRaid:mentions',
+    joins: 'antiRaid:joins',
+    whitelist: 'antiRaid:whitelist',
+    presets: 'antiRaid:presets',
+    baseLevel: 'antiRaid:baseLevel',
+    presetSelect: 'antiRaid:presetSelect',
+    panicModal: 'antiRaid:panicModal',
+    floodModal: 'antiRaid:floodModal',
+    mentionsModal: 'antiRaid:mentionsModal',
+    joinsModal: 'antiRaid:joinsModal',
+    whitelistHome: 'antiRaid:wl:home',
+    whitelistView: 'antiRaid:wl:view',
+    whitelistAddUser: 'antiRaid:wl:addUser',
+    whitelistRemoveUser: 'antiRaid:wl:removeUser',
+    whitelistAddRole: 'antiRaid:wl:addRole',
+    whitelistRemoveRole: 'antiRaid:wl:removeRole',
+    whitelistAddChannel: 'antiRaid:wl:addChannel',
+    whitelistRemoveChannel: 'antiRaid:wl:removeChannel',
+    whitelistUserAddSelect: 'antiRaid:wl:user:addSelect',
+    whitelistUserRemoveSelect: 'antiRaid:wl:user:removeSelect',
+    whitelistRoleAddSelect: 'antiRaid:wl:role:addSelect',
+    whitelistRoleRemoveSelect: 'antiRaid:wl:role:removeSelect',
+    whitelistChannelAddSelect: 'antiRaid:wl:channel:addSelect',
+    whitelistChannelRemoveSelect: 'antiRaid:wl:channel:removeSelect'
+};
+
+const ANTI_RAID_PRESETS = {
+    small: {
+        label: 'Servidor pequeño',
+        description: 'Mas sensible para comunidades reducidas.',
+        updates: {
+            enabled: true,
+            baseLevel: ANTI_RAID_LEVELS.MONITOR,
+            currentLevel: ANTI_RAID_LEVELS.MONITOR,
+            messageSpam: { enabled: true, maxMessages: 5, intervalSeconds: 8, timeoutMinutes: 8 },
+            duplicateSpam: { enabled: true, maxDuplicates: 3, intervalSeconds: 15, timeoutMinutes: 12 },
+            mentionSpam: { enabled: true, maxMentions: 4, blockEveryone: true, timeoutMinutes: 20 },
+            joinRaid: { enabled: true, warningJoins: 4, dangerJoins: 7, intervalSeconds: 25, newAccountDays: 10, suspiciousTimeoutMinutes: 45 },
+            panic: { autoActivateOnDanger: true, autoNormalizeMinutes: 15, messageMultiplierPercent: 65 }
+        }
+    },
+    medium: {
+        label: 'Servidor mediano',
+        description: 'Equilibrado para actividad normal.',
+        updates: {
+            enabled: true,
+            baseLevel: ANTI_RAID_LEVELS.MONITOR,
+            currentLevel: ANTI_RAID_LEVELS.MONITOR,
+            messageSpam: { enabled: true, maxMessages: 6, intervalSeconds: 8, timeoutMinutes: 10 },
+            duplicateSpam: { enabled: true, maxDuplicates: 3, intervalSeconds: 15, timeoutMinutes: 15 },
+            mentionSpam: { enabled: true, maxMentions: 5, blockEveryone: true, timeoutMinutes: 20 },
+            joinRaid: { enabled: true, warningJoins: 6, dangerJoins: 10, intervalSeconds: 30, newAccountDays: 7, suspiciousTimeoutMinutes: 30 },
+            panic: { autoActivateOnDanger: true, autoNormalizeMinutes: 15, messageMultiplierPercent: 70 }
+        }
+    },
+    large: {
+        label: 'Servidor grande',
+        description: 'Menos sensible para volumen alto.',
+        updates: {
+            enabled: true,
+            baseLevel: ANTI_RAID_LEVELS.CLEAN,
+            currentLevel: ANTI_RAID_LEVELS.CLEAN,
+            messageSpam: { enabled: true, maxMessages: 8, intervalSeconds: 8, timeoutMinutes: 10 },
+            duplicateSpam: { enabled: true, maxDuplicates: 4, intervalSeconds: 18, timeoutMinutes: 15 },
+            mentionSpam: { enabled: true, maxMentions: 6, blockEveryone: true, timeoutMinutes: 20 },
+            joinRaid: { enabled: true, warningJoins: 10, dangerJoins: 16, intervalSeconds: 30, newAccountDays: 5, suspiciousTimeoutMinutes: 25 },
+            panic: { autoActivateOnDanger: true, autoNormalizeMinutes: 12, messageMultiplierPercent: 75 }
+        }
+    },
+    strict: {
+        label: 'Modo estricto',
+        description: 'Contencion mas agresiva.',
+        updates: {
+            enabled: true,
+            baseLevel: ANTI_RAID_LEVELS.CONTAIN,
+            currentLevel: ANTI_RAID_LEVELS.CONTAIN,
+            messageSpam: { enabled: true, maxMessages: 5, intervalSeconds: 7, timeoutMinutes: 15 },
+            duplicateSpam: { enabled: true, maxDuplicates: 3, intervalSeconds: 12, timeoutMinutes: 20 },
+            mentionSpam: { enabled: true, maxMentions: 3, blockEveryone: true, timeoutMinutes: 30 },
+            joinRaid: { enabled: true, warningJoins: 5, dangerJoins: 8, intervalSeconds: 25, newAccountDays: 14, suspiciousTimeoutMinutes: 60 },
+            panic: { autoActivateOnDanger: true, autoNormalizeMinutes: 20, messageMultiplierPercent: 55 }
+        }
+    },
+    relaxed: {
+        label: 'Modo relajado',
+        description: 'Mas tolerante, ideal para pruebas.',
+        updates: {
+            enabled: true,
+            baseLevel: ANTI_RAID_LEVELS.MONITOR,
+            currentLevel: ANTI_RAID_LEVELS.MONITOR,
+            messageSpam: { enabled: true, maxMessages: 9, intervalSeconds: 10, timeoutMinutes: 8 },
+            duplicateSpam: { enabled: true, maxDuplicates: 4, intervalSeconds: 20, timeoutMinutes: 10 },
+            mentionSpam: { enabled: true, maxMentions: 7, blockEveryone: true, timeoutMinutes: 15 },
+            joinRaid: { enabled: true, warningJoins: 8, dangerJoins: 14, intervalSeconds: 35, newAccountDays: 5, suspiciousTimeoutMinutes: 20 },
+            panic: { autoActivateOnDanger: true, autoNormalizeMinutes: 10, messageMultiplierPercent: 80 }
+        }
+    }
 };
 
 const runtimeState = {
@@ -137,6 +256,64 @@ function getLevelLabel(level) {
 
 export function getAntiRaidLevelLabel(level) {
     return getLevelLabel(level);
+}
+
+export function getAntiRaidComponentIds() {
+    return ANTI_RAID_PANEL_IDS;
+}
+
+export function hasAntiRaidAccess(member) {
+    return Boolean(
+        member?.permissions?.has(PermissionFlagsBits.Administrator) ||
+        member?.permissions?.has(PermissionFlagsBits.ManageGuild)
+    );
+}
+
+function getLevelColor(level) {
+    switch (level) {
+        case ANTI_RAID_LEVELS.MONITOR:
+            return 0x5865F2;
+        case ANTI_RAID_LEVELS.CLEAN:
+            return 0xFEE75C;
+        case ANTI_RAID_LEVELS.CONTAIN:
+            return 0xF4900C;
+        case ANTI_RAID_LEVELS.PANIC:
+            return 0xED4245;
+        default:
+            return 0x747F8D;
+    }
+}
+
+function parseBooleanInput(value, fallback) {
+    const normalized = String(value ?? '').trim().toLowerCase();
+    if (['true', '1', 'si', 'sí', 'on', 'activo', 'activado'].includes(normalized)) return true;
+    if (['false', '0', 'no', 'off', 'inactivo', 'desactivado'].includes(normalized)) return false;
+    return fallback;
+}
+
+function parseIntegerInput(value, min, max, fallback) {
+    const parsed = Number.parseInt(String(value ?? '').trim(), 10);
+    if (!Number.isInteger(parsed)) return fallback;
+    return Math.min(max, Math.max(min, parsed));
+}
+
+async function logAntiRaidAdminAction(guild, client, {
+    title,
+    description,
+    actorTag,
+    fields = []
+}) {
+    const embed = createLogEmbed({
+        title,
+        color: 0x5865F2,
+        description,
+        fields: [
+            { name: 'Responsable', value: actorTag, inline: true },
+            ...fields
+        ]
+    });
+
+    await sendLog(guild, { embeds: [embed] }, client);
 }
 
 export function getAntiRaidLevelValue(key, { allowOff = false, allowPanic = false } = {}) {
@@ -622,6 +799,679 @@ export async function handleGuildMemberAddAntiRaid(member, client) {
     return {
         suppressWelcome: Boolean(severity || shouldLogSuspiciousAction)
     };
+}
+
+function createAntiRaidPanelEmbed(guildId) {
+    const config = getAntiRaidStatusSummary(guildId);
+    const level = config.enabled ? config.currentLevel : ANTI_RAID_LEVELS.OFF;
+
+    return new EmbedBuilder()
+        .setColor(getLevelColor(level))
+        .setTitle('🛡️ Centro Anti-Raid')
+        .setDescription('Control rapido del sistema anti-raid. Usa el dashboard para ajustes mas extensos y este panel para operar en vivo.')
+        .addFields(
+            { name: 'Estado', value: config.enabled ? '✅ Activado' : '⛔ Apagado', inline: true },
+            { name: 'Nivel actual', value: config.effectiveLevelLabel, inline: true },
+            { name: 'Nivel base', value: config.baseLevelLabel, inline: true },
+            { name: 'Panic', value: level === ANTI_RAID_LEVELS.PANIC ? `🔴 Activo hasta ${config.panicUntilText}\nQueda ${config.panicRemainingText}` : '🟢 No activo', inline: false },
+            { name: 'Mensajes', value: `Flood: ${config.messageSpam.enabled ? `${config.messageSpam.maxMessages}/${config.messageSpam.intervalSeconds}s` : 'off'} · Dup: ${config.duplicateSpam.enabled ? `${config.duplicateSpam.maxDuplicates}/${config.duplicateSpam.intervalSeconds}s` : 'off'} · Ment: ${config.mentionSpam.enabled ? `${config.mentionSpam.maxMentions}` : 'off'}`, inline: false },
+            { name: 'Joins', value: `${config.joinRaid.enabled ? `${config.joinRaid.warningJoins}/${config.joinRaid.dangerJoins} en ${config.joinRaid.intervalSeconds}s` : 'off'} · Cuentas nuevas: ${config.joinRaid.newAccountDays}d · timeout ${config.joinRaid.suspiciousTimeoutMinutes}m`, inline: false },
+            { name: 'Whitelist', value: `Usuarios: ${config.whitelistUserIds.length} · Roles: ${config.whitelistRoleIds.length} · Canales: ${config.whitelistChannelIds.length}`, inline: false }
+        )
+        .setFooter({ text: 'Toggle, Panic, presets y modales de ajuste rapido.' })
+        .setTimestamp();
+}
+
+function createAntiRaidPanelComponents(guildId) {
+    const config = getAntiRaidStatusSummary(guildId);
+    const rows = [];
+
+    rows.push(
+        new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+                .setCustomId(ANTI_RAID_PANEL_IDS.toggle)
+                .setLabel(config.enabled ? 'Desactivar' : 'Activar')
+                .setStyle(config.enabled ? ButtonStyle.Secondary : ButtonStyle.Success),
+            new ButtonBuilder()
+                .setCustomId(ANTI_RAID_PANEL_IDS.panic)
+                .setLabel('Panic')
+                .setStyle(ButtonStyle.Danger),
+            new ButtonBuilder()
+                .setCustomId(ANTI_RAID_PANEL_IDS.normalize)
+                .setLabel('Normalizar')
+                .setStyle(ButtonStyle.Success)
+                .setDisabled(!config.enabled || config.currentLevel !== ANTI_RAID_LEVELS.PANIC),
+            new ButtonBuilder()
+                .setCustomId(ANTI_RAID_PANEL_IDS.refresh)
+                .setLabel('Actualizar')
+                .setStyle(ButtonStyle.Secondary)
+        )
+    );
+
+    rows.push(
+        new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId(ANTI_RAID_PANEL_IDS.flood).setLabel('Flood').setStyle(ButtonStyle.Primary),
+            new ButtonBuilder().setCustomId(ANTI_RAID_PANEL_IDS.mentions).setLabel('Menciones').setStyle(ButtonStyle.Primary),
+            new ButtonBuilder().setCustomId(ANTI_RAID_PANEL_IDS.joins).setLabel('Joins').setStyle(ButtonStyle.Primary),
+            new ButtonBuilder().setCustomId(ANTI_RAID_PANEL_IDS.whitelist).setLabel('Whitelist').setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder().setCustomId(ANTI_RAID_PANEL_IDS.presets).setLabel('Presets').setStyle(ButtonStyle.Secondary)
+        )
+    );
+
+    rows.push(
+        new ActionRowBuilder().addComponents(
+            new StringSelectMenuBuilder()
+                .setCustomId(ANTI_RAID_PANEL_IDS.baseLevel)
+                .setPlaceholder(`Nivel base actual: ${config.baseLevelLabel}`)
+                .addOptions([
+                    { label: 'Monitor', value: 'monitor', description: 'Solo registra eventos' },
+                    { label: 'Clean', value: 'clean', description: 'Limpia mensajes sospechosos' },
+                    { label: 'Contain', value: 'contain', description: 'Limpia y aplica timeout' }
+                ])
+        )
+    );
+
+    const baseUrl = process.env.BASE_URL?.trim();
+    if (baseUrl) {
+        rows.push(
+            new ActionRowBuilder().addComponents(
+                new ButtonBuilder()
+                    .setLabel('Abrir Dashboard')
+                    .setStyle(ButtonStyle.Link)
+                    .setURL(`${baseUrl.replace(/\/$/, '')}/dashboard`)
+            )
+        );
+    }
+
+    return rows;
+}
+
+export function createAntiRaidPanelPayload(guild) {
+    return {
+        embeds: [createAntiRaidPanelEmbed(guild.id)],
+        components: createAntiRaidPanelComponents(guild.id)
+    };
+}
+
+export async function publishAntiRaidPanel(guild, channel) {
+    const payload = createAntiRaidPanelPayload(guild);
+    const config = getSyncedAntiRaidConfig(guild.id);
+    let message = null;
+
+    if (config.panelChannelId && config.panelMessageId && config.panelChannelId === channel.id) {
+        message = await channel.messages.fetch(config.panelMessageId).catch(() => null);
+        if (message) {
+            await message.edit(payload);
+        }
+    }
+
+    if (!message) {
+        message = await channel.send(payload);
+    }
+
+    updateAntiRaidConfig(guild.id, {
+        panelChannelId: channel.id,
+        panelMessageId: message.id
+    });
+
+    return message;
+}
+
+export async function refreshAntiRaidPanelMessage(guild) {
+    const config = getSyncedAntiRaidConfig(guild.id);
+    if (!config.panelChannelId || !config.panelMessageId) {
+        return false;
+    }
+
+    const channel = guild.channels.cache.get(config.panelChannelId) || await guild.channels.fetch(config.panelChannelId).catch(() => null);
+    if (!channel?.isTextBased()) {
+        return false;
+    }
+
+    const message = await channel.messages.fetch(config.panelMessageId).catch(() => null);
+    if (!message) {
+        updateAntiRaidConfig(guild.id, {
+            panelChannelId: null,
+            panelMessageId: null
+        });
+        return false;
+    }
+
+    await message.edit(createAntiRaidPanelPayload(guild)).catch(() => null);
+    return true;
+}
+
+function createWhitelistSummaryEmbed(guildId) {
+    const config = getAntiRaidStatusSummary(guildId);
+    const users = config.whitelistUserIds.length ? config.whitelistUserIds.map(id => `<@${id}>`).join(', ') : 'Ninguno';
+    const roles = config.whitelistRoleIds.length ? config.whitelistRoleIds.map(id => `<@&${id}>`).join(', ') : 'Ninguno';
+    const channels = config.whitelistChannelIds.length ? config.whitelistChannelIds.map(id => `<#${id}>`).join(', ') : 'Ninguno';
+
+    return new EmbedBuilder()
+        .setColor(0x5865F2)
+        .setTitle('📋 Whitelist Anti-Raid')
+        .setDescription('Gestiona exclusiones de usuarios, roles y canales sin salir de Discord.')
+        .addFields(
+            { name: `Usuarios (${config.whitelistUserIds.length})`, value: truncate(users, 1000), inline: false },
+            { name: `Roles (${config.whitelistRoleIds.length})`, value: truncate(roles, 1000), inline: false },
+            { name: `Canales (${config.whitelistChannelIds.length})`, value: truncate(channels, 1000), inline: false }
+        )
+        .setTimestamp();
+}
+
+function createWhitelistHomeComponents() {
+    return [
+        new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId(ANTI_RAID_PANEL_IDS.whitelistAddUser).setLabel('Añadir usuario').setStyle(ButtonStyle.Primary),
+            new ButtonBuilder().setCustomId(ANTI_RAID_PANEL_IDS.whitelistRemoveUser).setLabel('Quitar usuario').setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder().setCustomId(ANTI_RAID_PANEL_IDS.whitelistAddRole).setLabel('Añadir rol').setStyle(ButtonStyle.Primary),
+            new ButtonBuilder().setCustomId(ANTI_RAID_PANEL_IDS.whitelistRemoveRole).setLabel('Quitar rol').setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder().setCustomId(ANTI_RAID_PANEL_IDS.whitelistView).setLabel('Ver').setStyle(ButtonStyle.Secondary)
+        ),
+        new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId(ANTI_RAID_PANEL_IDS.whitelistAddChannel).setLabel('Añadir canal').setStyle(ButtonStyle.Primary),
+            new ButtonBuilder().setCustomId(ANTI_RAID_PANEL_IDS.whitelistRemoveChannel).setLabel('Quitar canal').setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder().setCustomId(ANTI_RAID_PANEL_IDS.whitelistHome).setLabel('Refrescar').setStyle(ButtonStyle.Secondary)
+        )
+    ];
+}
+
+function createPresetSelectorPayload() {
+    return {
+        embeds: [
+            new EmbedBuilder()
+                .setColor(0x5865F2)
+                .setTitle('🎛️ Presets Anti-Raid')
+                .setDescription('Aplica una configuracion base y luego retocala si hace falta.')
+        ],
+        components: [
+            new ActionRowBuilder().addComponents(
+                new StringSelectMenuBuilder()
+                    .setCustomId(ANTI_RAID_PANEL_IDS.presetSelect)
+                    .setPlaceholder('Selecciona un preset')
+                    .addOptions(
+                        Object.entries(ANTI_RAID_PRESETS).map(([value, preset]) => ({
+                            label: preset.label,
+                            value,
+                            description: preset.description
+                        }))
+                    )
+            )
+        ]
+    };
+}
+
+function createWhitelistSelectPayload(kind, action) {
+    if (kind === 'user') {
+        return {
+            embeds: [new EmbedBuilder().setColor(0x5865F2).setTitle(action === 'add' ? 'Añadir usuarios a la whitelist' : 'Quitar usuarios de la whitelist')],
+            components: [
+                new ActionRowBuilder().addComponents(
+                    new UserSelectMenuBuilder()
+                        .setCustomId(action === 'add' ? ANTI_RAID_PANEL_IDS.whitelistUserAddSelect : ANTI_RAID_PANEL_IDS.whitelistUserRemoveSelect)
+                        .setPlaceholder(action === 'add' ? 'Selecciona usuarios' : 'Selecciona usuarios a quitar')
+                        .setMinValues(1)
+                        .setMaxValues(10)
+                )
+            ]
+        };
+    }
+
+    if (kind === 'role') {
+        return {
+            embeds: [new EmbedBuilder().setColor(0x5865F2).setTitle(action === 'add' ? 'Añadir roles a la whitelist' : 'Quitar roles de la whitelist')],
+            components: [
+                new ActionRowBuilder().addComponents(
+                    new RoleSelectMenuBuilder()
+                        .setCustomId(action === 'add' ? ANTI_RAID_PANEL_IDS.whitelistRoleAddSelect : ANTI_RAID_PANEL_IDS.whitelistRoleRemoveSelect)
+                        .setPlaceholder(action === 'add' ? 'Selecciona roles' : 'Selecciona roles a quitar')
+                        .setMinValues(1)
+                        .setMaxValues(10)
+                )
+            ]
+        };
+    }
+
+    return {
+        embeds: [new EmbedBuilder().setColor(0x5865F2).setTitle(action === 'add' ? 'Añadir canales a la whitelist' : 'Quitar canales de la whitelist')],
+        components: [
+            new ActionRowBuilder().addComponents(
+                new ChannelSelectMenuBuilder()
+                    .setCustomId(action === 'add' ? ANTI_RAID_PANEL_IDS.whitelistChannelAddSelect : ANTI_RAID_PANEL_IDS.whitelistChannelRemoveSelect)
+                    .setPlaceholder(action === 'add' ? 'Selecciona canales' : 'Selecciona canales a quitar')
+                    .setChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement, ChannelType.PublicThread, ChannelType.PrivateThread)
+                    .setMinValues(1)
+                    .setMaxValues(10)
+            )
+        ]
+    };
+}
+
+function createPanelActionModal(customId, title, fields) {
+    const modal = new ModalBuilder().setCustomId(customId).setTitle(title);
+    const rows = fields.map(field =>
+        new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+                .setCustomId(field.id)
+                .setLabel(field.label)
+                .setPlaceholder(field.placeholder || '')
+                .setRequired(field.required !== false)
+                .setStyle(field.style || TextInputStyle.Short)
+                .setValue(field.value || '')
+        )
+    );
+
+    modal.addComponents(...rows);
+    return modal;
+}
+
+async function respondNoAccess(interaction) {
+    const payload = { content: '❌ No tienes permisos para usar este panel.', flags: 64 };
+    if (interaction.replied || interaction.deferred) {
+        return interaction.followUp(payload).catch(() => {});
+    }
+    return interaction.reply(payload).catch(() => {});
+}
+
+function applyWhitelistIds(guildId, key, ids, action) {
+    const config = getSyncedAntiRaidConfig(guildId);
+    const current = [...config[key]];
+    let next;
+
+    if (action === 'add') {
+        next = [...new Set([...current, ...ids])];
+    } else {
+        next = current.filter(id => !ids.includes(id));
+    }
+
+    return updateAntiRaidConfig(guildId, {
+        [key]: next
+    });
+}
+
+async function updateWhitelistInteraction(interaction, client, {
+    key,
+    ids,
+    action,
+    label
+}) {
+    const updated = applyWhitelistIds(interaction.guild.id, key, ids, action);
+    await refreshAntiRaidPanelMessage(interaction.guild);
+    await logAntiRaidAdminAction(interaction.guild, client, {
+        title: '🧩 Whitelist Anti-Raid actualizada',
+        description: `${action === 'add' ? 'Se añadieron' : 'Se quitaron'} ${label} desde el panel interactivo.`,
+        actorTag: interaction.user.tag
+    });
+
+    return interaction.update({
+        embeds: [createWhitelistSummaryEmbed(interaction.guild.id)],
+        components: createWhitelistHomeComponents()
+    }).catch(async () => {
+        await interaction.reply({
+            content: `✅ Whitelist actualizada. Ahora hay ${updated[key].length} elemento(s) en ${label}.`,
+            flags: 64
+        }).catch(() => {});
+    });
+}
+
+export async function handleAntiRaidButton(interaction, client) {
+    if (!interaction.customId.startsWith('antiRaid:')) return false;
+    if (!hasAntiRaidAccess(interaction.member)) {
+        await respondNoAccess(interaction);
+        return true;
+    }
+
+    const config = getAntiRaidStatusSummary(interaction.guild.id);
+
+    if (interaction.customId === ANTI_RAID_PANEL_IDS.toggle) {
+        const updated = updateAntiRaidConfig(interaction.guild.id, {
+            enabled: !config.enabled,
+            currentLevel: !config.enabled ? config.baseLevel : ANTI_RAID_LEVELS.OFF,
+            panicUntil: !config.enabled ? config.panicUntil : null,
+            panicReason: !config.enabled ? config.panicReason : null
+        });
+
+        await refreshAntiRaidPanelMessage(interaction.guild);
+        await logAntiRaidAdminAction(interaction.guild, client, {
+            title: updated.enabled ? '✅ Anti-Raid activado' : '⛔ Anti-Raid desactivado',
+            description: 'El estado del sistema se cambio desde el panel interactivo.',
+            actorTag: interaction.user.tag
+        });
+        await interaction.reply({ content: `✅ Anti-Raid ${updated.enabled ? 'activado' : 'desactivado'}.`, flags: 64 }).catch(() => {});
+        return true;
+    }
+
+    if (interaction.customId === ANTI_RAID_PANEL_IDS.panic) {
+        const current = getAntiRaidStatusSummary(interaction.guild.id);
+        const modal = createPanelActionModal(ANTI_RAID_PANEL_IDS.panicModal, 'Activar Panic', [
+            { id: 'reason', label: 'Motivo', placeholder: 'Raid activo, ola de joins, spam coordinado...', value: current.panicReason || '' },
+            { id: 'minutes', label: 'Duracion en minutos', placeholder: String(current.panic.autoNormalizeMinutes), value: String(current.panic.autoNormalizeMinutes) }
+        ]);
+        await interaction.showModal(modal);
+        return true;
+    }
+
+    if (interaction.customId === ANTI_RAID_PANEL_IDS.normalize) {
+        await normalizeAntiRaidLevel(interaction.guild, client, {
+            reason: `Normalizado desde panel por ${interaction.user.tag}`,
+            actorTag: interaction.user.tag
+        });
+        await refreshAntiRaidPanelMessage(interaction.guild);
+        await interaction.reply({ content: '🟢 El sistema volvio al nivel base.', flags: 64 }).catch(() => {});
+        return true;
+    }
+
+    if (interaction.customId === ANTI_RAID_PANEL_IDS.refresh) {
+        await refreshAntiRaidPanelMessage(interaction.guild);
+        await interaction.reply({ content: '🔄 Panel anti-raid actualizado.', flags: 64 }).catch(() => {});
+        return true;
+    }
+
+    if (interaction.customId === ANTI_RAID_PANEL_IDS.flood) {
+        const modal = createPanelActionModal(ANTI_RAID_PANEL_IDS.floodModal, 'Configurar Flood', [
+            { id: 'enabled', label: 'Flood activo (true/false)', value: String(config.messageSpam.enabled) },
+            { id: 'maxMessages', label: 'Max mensajes', value: String(config.messageSpam.maxMessages) },
+            { id: 'intervalSeconds', label: 'Ventana en segundos', value: String(config.messageSpam.intervalSeconds) },
+            { id: 'timeoutMinutes', label: 'Timeout flood en minutos', value: String(config.messageSpam.timeoutMinutes) },
+            { id: 'duplicatePack', label: 'Duplicados max|ventana|timeout', placeholder: '3|15|15', value: `${config.duplicateSpam.maxDuplicates}|${config.duplicateSpam.intervalSeconds}|${config.duplicateSpam.timeoutMinutes}` }
+        ]);
+        await interaction.showModal(modal);
+        return true;
+    }
+
+    if (interaction.customId === ANTI_RAID_PANEL_IDS.mentions) {
+        const modal = createPanelActionModal(ANTI_RAID_PANEL_IDS.mentionsModal, 'Configurar Menciones', [
+            { id: 'enabled', label: 'Menciones activas (true/false)', value: String(config.mentionSpam.enabled) },
+            { id: 'maxMentions', label: 'Max menciones', value: String(config.mentionSpam.maxMentions) },
+            { id: 'timeoutMinutes', label: 'Timeout menciones', value: String(config.mentionSpam.timeoutMinutes) },
+            { id: 'blockEveryone', label: 'Bloquear everyone/here (true/false)', value: String(config.mentionSpam.blockEveryone) }
+        ]);
+        await interaction.showModal(modal);
+        return true;
+    }
+
+    if (interaction.customId === ANTI_RAID_PANEL_IDS.joins) {
+        const modal = createPanelActionModal(ANTI_RAID_PANEL_IDS.joinsModal, 'Configurar Joins', [
+            { id: 'enabled', label: 'Join raid activo (true/false)', value: String(config.joinRaid.enabled) },
+            { id: 'warningJoins', label: 'Joins de alerta', value: String(config.joinRaid.warningJoins) },
+            { id: 'dangerJoins', label: 'Joins para Panic', value: String(config.joinRaid.dangerJoins) },
+            { id: 'intervalSeconds', label: 'Ventana joins en segundos', value: String(config.joinRaid.intervalSeconds) },
+            { id: 'advanced', label: 'Dias|timeout|panicMin|strict|autoPanic', placeholder: '7|30|15|70|true', value: `${config.joinRaid.newAccountDays}|${config.joinRaid.suspiciousTimeoutMinutes}|${config.panic.autoNormalizeMinutes}|${config.panic.messageMultiplierPercent}|${config.panic.autoActivateOnDanger}` }
+        ]);
+        await interaction.showModal(modal);
+        return true;
+    }
+
+    if (interaction.customId === ANTI_RAID_PANEL_IDS.whitelist || interaction.customId === ANTI_RAID_PANEL_IDS.whitelistHome || interaction.customId === ANTI_RAID_PANEL_IDS.whitelistView) {
+        const payload = {
+            embeds: [createWhitelistSummaryEmbed(interaction.guild.id)],
+            components: createWhitelistHomeComponents(),
+            flags: 64
+        };
+
+        if (interaction.customId === ANTI_RAID_PANEL_IDS.whitelist) {
+            await interaction.reply(payload).catch(() => {});
+        } else {
+            await interaction.update(payload).catch(() => {});
+        }
+        return true;
+    }
+
+    if (interaction.customId === ANTI_RAID_PANEL_IDS.presets) {
+        await interaction.reply({
+            ...createPresetSelectorPayload(),
+            flags: 64
+        }).catch(() => {});
+        return true;
+    }
+
+    if (interaction.customId === ANTI_RAID_PANEL_IDS.whitelistAddUser) {
+        await interaction.update(createWhitelistSelectPayload('user', 'add')).catch(() => {});
+        return true;
+    }
+    if (interaction.customId === ANTI_RAID_PANEL_IDS.whitelistRemoveUser) {
+        await interaction.update(createWhitelistSelectPayload('user', 'remove')).catch(() => {});
+        return true;
+    }
+    if (interaction.customId === ANTI_RAID_PANEL_IDS.whitelistAddRole) {
+        await interaction.update(createWhitelistSelectPayload('role', 'add')).catch(() => {});
+        return true;
+    }
+    if (interaction.customId === ANTI_RAID_PANEL_IDS.whitelistRemoveRole) {
+        await interaction.update(createWhitelistSelectPayload('role', 'remove')).catch(() => {});
+        return true;
+    }
+    if (interaction.customId === ANTI_RAID_PANEL_IDS.whitelistAddChannel) {
+        await interaction.update(createWhitelistSelectPayload('channel', 'add')).catch(() => {});
+        return true;
+    }
+    if (interaction.customId === ANTI_RAID_PANEL_IDS.whitelistRemoveChannel) {
+        await interaction.update(createWhitelistSelectPayload('channel', 'remove')).catch(() => {});
+        return true;
+    }
+
+    return true;
+}
+
+export async function handleAntiRaidSelect(interaction, client) {
+    if (!interaction.customId.startsWith('antiRaid:')) return false;
+    if (!hasAntiRaidAccess(interaction.member)) {
+        await respondNoAccess(interaction);
+        return true;
+    }
+
+    if (interaction.customId === ANTI_RAID_PANEL_IDS.baseLevel) {
+        const levelValue = getAntiRaidLevelValue(interaction.values[0], { allowOff: false, allowPanic: false });
+        if (!levelValue) {
+            await interaction.reply({ content: '❌ Nivel no valido.', flags: 64 }).catch(() => {});
+            return true;
+        }
+
+        const current = getSyncedAntiRaidConfig(interaction.guild.id);
+        updateAntiRaidConfig(interaction.guild.id, {
+            baseLevel: levelValue,
+            currentLevel: current.currentLevel === ANTI_RAID_LEVELS.PANIC ? ANTI_RAID_LEVELS.PANIC : levelValue
+        });
+
+        await refreshAntiRaidPanelMessage(interaction.guild);
+        await logAntiRaidAdminAction(interaction.guild, client, {
+            title: '🎚️ Nivel base actualizado',
+            description: `El nivel base se cambio a ${getLevelLabel(levelValue)} desde el panel.`,
+            actorTag: interaction.user.tag
+        });
+        await interaction.reply({ content: `✅ Nivel base: ${getLevelLabel(levelValue)}.`, flags: 64 }).catch(() => {});
+        return true;
+    }
+
+    if (interaction.customId === ANTI_RAID_PANEL_IDS.presetSelect) {
+        const preset = ANTI_RAID_PRESETS[interaction.values[0]];
+        if (!preset) {
+            await interaction.reply({ content: '❌ Preset no valido.', flags: 64 }).catch(() => {});
+            return true;
+        }
+
+        updateAntiRaidConfig(interaction.guild.id, preset.updates);
+        await refreshAntiRaidPanelMessage(interaction.guild);
+        await logAntiRaidAdminAction(interaction.guild, client, {
+            title: '🎛️ Preset Anti-Raid aplicado',
+            description: `Se aplico el preset **${preset.label}** desde el panel.`,
+            actorTag: interaction.user.tag
+        });
+        await interaction.update({
+            embeds: [
+                new EmbedBuilder()
+                    .setColor(0x57F287)
+                    .setTitle('✅ Preset aplicado')
+                    .setDescription(`Se aplico **${preset.label}**. El panel principal ya fue refrescado.`)
+            ],
+            components: []
+        }).catch(() => {});
+        return true;
+    }
+
+    if (interaction.customId === ANTI_RAID_PANEL_IDS.whitelistUserAddSelect) {
+        await updateWhitelistInteraction(interaction, client, {
+            key: 'whitelistUserIds',
+            ids: interaction.values,
+            action: 'add',
+            label: 'usuarios'
+        });
+        return true;
+    }
+    if (interaction.customId === ANTI_RAID_PANEL_IDS.whitelistUserRemoveSelect) {
+        await updateWhitelistInteraction(interaction, client, {
+            key: 'whitelistUserIds',
+            ids: interaction.values,
+            action: 'remove',
+            label: 'usuarios'
+        });
+        return true;
+    }
+    if (interaction.customId === ANTI_RAID_PANEL_IDS.whitelistRoleAddSelect) {
+        await updateWhitelistInteraction(interaction, client, {
+            key: 'whitelistRoleIds',
+            ids: interaction.values,
+            action: 'add',
+            label: 'roles'
+        });
+        return true;
+    }
+    if (interaction.customId === ANTI_RAID_PANEL_IDS.whitelistRoleRemoveSelect) {
+        await updateWhitelistInteraction(interaction, client, {
+            key: 'whitelistRoleIds',
+            ids: interaction.values,
+            action: 'remove',
+            label: 'roles'
+        });
+        return true;
+    }
+    if (interaction.customId === ANTI_RAID_PANEL_IDS.whitelistChannelAddSelect) {
+        await updateWhitelistInteraction(interaction, client, {
+            key: 'whitelistChannelIds',
+            ids: interaction.values,
+            action: 'add',
+            label: 'canales'
+        });
+        return true;
+    }
+    if (interaction.customId === ANTI_RAID_PANEL_IDS.whitelistChannelRemoveSelect) {
+        await updateWhitelistInteraction(interaction, client, {
+            key: 'whitelistChannelIds',
+            ids: interaction.values,
+            action: 'remove',
+            label: 'canales'
+        });
+        return true;
+    }
+
+    return true;
+}
+
+export async function handleAntiRaidModal(interaction, client) {
+    if (!interaction.customId.startsWith('antiRaid:')) return false;
+    if (!hasAntiRaidAccess(interaction.member)) {
+        await respondNoAccess(interaction);
+        return true;
+    }
+
+    const fields = interaction.fields;
+
+    if (interaction.customId === ANTI_RAID_PANEL_IDS.panicModal) {
+        const current = getAntiRaidStatusSummary(interaction.guild.id);
+        const reason = truncate(fields.getTextInputValue('reason') || `Panic activado por ${interaction.user.tag}`, 200);
+        const minutes = parseIntegerInput(fields.getTextInputValue('minutes'), 1, 1440, current.panic.autoNormalizeMinutes);
+
+        await activateAntiRaidPanic(interaction.guild, client, {
+            reason,
+            durationMinutes: minutes,
+            actorTag: interaction.user.tag
+        });
+        await refreshAntiRaidPanelMessage(interaction.guild);
+        await interaction.reply({ content: `🚨 Panic activado por ${minutes} minuto(s).`, flags: 64 }).catch(() => {});
+        return true;
+    }
+
+    if (interaction.customId === ANTI_RAID_PANEL_IDS.floodModal) {
+        const current = getAntiRaidStatusSummary(interaction.guild.id);
+        const [dupMaxRaw, dupWindowRaw, dupTimeoutRaw] = String(fields.getTextInputValue('duplicatePack') || '').split('|');
+
+        updateAntiRaidConfig(interaction.guild.id, {
+            messageSpam: {
+                enabled: parseBooleanInput(fields.getTextInputValue('enabled'), current.messageSpam.enabled),
+                maxMessages: parseIntegerInput(fields.getTextInputValue('maxMessages'), 3, 20, current.messageSpam.maxMessages),
+                intervalSeconds: parseIntegerInput(fields.getTextInputValue('intervalSeconds'), 3, 60, current.messageSpam.intervalSeconds),
+                timeoutMinutes: parseIntegerInput(fields.getTextInputValue('timeoutMinutes'), 1, 1440, current.messageSpam.timeoutMinutes)
+            },
+            duplicateSpam: {
+                maxDuplicates: parseIntegerInput(dupMaxRaw, 2, 10, current.duplicateSpam.maxDuplicates),
+                intervalSeconds: parseIntegerInput(dupWindowRaw, 5, 120, current.duplicateSpam.intervalSeconds),
+                timeoutMinutes: parseIntegerInput(dupTimeoutRaw, 1, 1440, current.duplicateSpam.timeoutMinutes)
+            }
+        });
+
+        await refreshAntiRaidPanelMessage(interaction.guild);
+        await logAntiRaidAdminAction(interaction.guild, client, {
+            title: '💬 Flood anti-raid actualizado',
+            description: 'Se editaron umbrales de flood/duplicados desde el panel.',
+            actorTag: interaction.user.tag
+        });
+        await interaction.reply({ content: '✅ Ajustes de flood actualizados.', flags: 64 }).catch(() => {});
+        return true;
+    }
+
+    if (interaction.customId === ANTI_RAID_PANEL_IDS.mentionsModal) {
+        const current = getAntiRaidStatusSummary(interaction.guild.id);
+
+        updateAntiRaidConfig(interaction.guild.id, {
+            mentionSpam: {
+                enabled: parseBooleanInput(fields.getTextInputValue('enabled'), current.mentionSpam.enabled),
+                maxMentions: parseIntegerInput(fields.getTextInputValue('maxMentions'), 2, 20, current.mentionSpam.maxMentions),
+                timeoutMinutes: parseIntegerInput(fields.getTextInputValue('timeoutMinutes'), 1, 1440, current.mentionSpam.timeoutMinutes),
+                blockEveryone: parseBooleanInput(fields.getTextInputValue('blockEveryone'), current.mentionSpam.blockEveryone)
+            }
+        });
+
+        await refreshAntiRaidPanelMessage(interaction.guild);
+        await logAntiRaidAdminAction(interaction.guild, client, {
+            title: '📣 Menciones anti-raid actualizadas',
+            description: 'Se editaron umbrales de menciones desde el panel.',
+            actorTag: interaction.user.tag
+        });
+        await interaction.reply({ content: '✅ Ajustes de menciones actualizados.', flags: 64 }).catch(() => {});
+        return true;
+    }
+
+    if (interaction.customId === ANTI_RAID_PANEL_IDS.joinsModal) {
+        const current = getAntiRaidStatusSummary(interaction.guild.id);
+        const [daysRaw, timeoutRaw, panicMinutesRaw, strictRaw, autoPanicRaw] = String(fields.getTextInputValue('advanced') || '').split('|');
+
+        updateAntiRaidConfig(interaction.guild.id, {
+            joinRaid: {
+                enabled: parseBooleanInput(fields.getTextInputValue('enabled'), current.joinRaid.enabled),
+                warningJoins: parseIntegerInput(fields.getTextInputValue('warningJoins'), 3, 50, current.joinRaid.warningJoins),
+                dangerJoins: parseIntegerInput(fields.getTextInputValue('dangerJoins'), 4, 100, current.joinRaid.dangerJoins),
+                intervalSeconds: parseIntegerInput(fields.getTextInputValue('intervalSeconds'), 10, 300, current.joinRaid.intervalSeconds),
+                newAccountDays: parseIntegerInput(daysRaw, 1, 90, current.joinRaid.newAccountDays),
+                suspiciousTimeoutMinutes: parseIntegerInput(timeoutRaw, 1, 1440, current.joinRaid.suspiciousTimeoutMinutes)
+            },
+            panic: {
+                autoNormalizeMinutes: parseIntegerInput(panicMinutesRaw, 1, 1440, current.panic.autoNormalizeMinutes),
+                messageMultiplierPercent: parseIntegerInput(strictRaw, 30, 100, current.panic.messageMultiplierPercent),
+                autoActivateOnDanger: parseBooleanInput(autoPanicRaw, current.panic.autoActivateOnDanger)
+            }
+        });
+
+        await refreshAntiRaidPanelMessage(interaction.guild);
+        await logAntiRaidAdminAction(interaction.guild, client, {
+            title: '🚪 Join raid actualizado',
+            description: 'Se editaron umbrales de joins y Panic desde el panel.',
+            actorTag: interaction.user.tag
+        });
+        await interaction.reply({ content: '✅ Ajustes de joins actualizados.', flags: 64 }).catch(() => {});
+        return true;
+    }
+
+    return true;
 }
 
 export function getAntiRaidStatusSummary(guildId) {

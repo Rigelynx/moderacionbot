@@ -6,16 +6,16 @@ export const command = {
     name: 'register',
     description: 'Registrarte en el sistema del bot',
     async execute(interaction, client) {
+        const guildId = interaction.guild.id;
         const userId = interaction.user.id;
 
-        if (isRegistered(userId)) {
+        if (isRegistered(guildId, userId)) {
             return interaction.reply({ content: '❌ Ya estás registrado. Usa `/profile` para ver tu perfil o `/unregister` para eliminar tu registro.', flags: 64 });
         }
 
-        const data = registerUser(userId, {
+        registerUser(guildId, userId, {
             username: interaction.user.username,
             avatar: interaction.user.displayAvatarURL({ size: 128 }),
-            guildId: interaction.guild.id,
             guildName: interaction.guild.name
         });
 

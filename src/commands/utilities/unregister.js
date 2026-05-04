@@ -6,13 +6,14 @@ export const command = {
     name: 'unregister',
     description: 'Eliminar tu registro del sistema del bot',
     async execute(interaction, client) {
+        const guildId = interaction.guild.id;
         const userId = interaction.user.id;
 
-        if (!isRegistered(userId)) {
+        if (!isRegistered(guildId, userId)) {
             return interaction.reply({ content: '❌ No estás registrado. Usa `/register` para registrarte.', flags: 64 });
         }
 
-        unregisterUser(userId);
+        unregisterUser(guildId, userId);
 
         const embed = new EmbedBuilder()
             .setColor(0xffa500)

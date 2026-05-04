@@ -11,6 +11,7 @@ ModBot es un bot de moderación robusto y avanzado para Discord con un panel de 
 - Sistema de tickets premium con panel configurable, tipos de ticket, prioridades, claim, asignación, modal de apertura y transcripts HTML.
 - Sistema persistente de advertencias con auto-ban al llegar al límite.
 - Anti-raid con niveles `Monitor`, `Clean`, `Contain` y `Panic`, retorno automático/manual, flood control, anti-duplicados, anti-menciones y protección ante join raids.
+- Capa IA opcional para tickets, reportes, moderación asistida, anti-raid y `/8ball`.
 - Logs automáticos, bans temporales, welcome/goodbye con `@napi-rs/canvas`, sugerencias, AFK, `unafk`, registro de usuarios y perfil visual configurable.
 
 ## Sistema de tickets premium
@@ -30,6 +31,7 @@ El comando `/ticket` ahora controla un flujo mucho más completo:
 
 ### Moderación
 - `/antiraid`
+- `/modai`
 - `/ban`, `/softban`, `/tempban`, `/unban`, `/untimeban`, `/massban`, `/massunban`
 - `/kick`, `/mute`, `/unmute`
 - `/warn`, `/unwarn`, `/warnings`
@@ -44,6 +46,7 @@ El comando `/antiraid` controla la nueva capa de defensa del servidor:
 - Detección de flood, duplicados, menciones abusivas y olas de joins.
 - `Panic` con retorno automático al nivel base y salida manual con `/antiraid normalize`.
 - Whitelist por usuario, rol y canal para reducir falsos positivos.
+- Resumen asistido con `/antiraid resumen` cuando la IA esté activada.
 
 Flujo recomendado:
 
@@ -52,6 +55,20 @@ Flujo recomendado:
 3. `/antiraid config ...` para ajustar umbrales
 4. Cuando esté estable, subir a `clean` o `contain`
 
+## IA opcional
+
+La IA está apagada por defecto y usa doble activación: variables de entorno y configuración por servidor.
+
+- `/ia status` muestra si falta `AI_ENABLED`, `OPENAI_API_KEY` o configuración del servidor.
+- `/ia config habilitado:true` activa IA para el servidor.
+- `/ticket ia_resumen` genera un resumen del ticket actual para staff.
+- `/ticket ia_respuesta` sugiere respuestas editables para soporte.
+- `/report` puede clasificar reportes en logs cuando la función está activa.
+- `/modai analizar|explicar|incidente` ayuda al staff sin ejecutar castigos automáticos.
+- `/8ball modo:ia` genera respuestas dinámicas.
+
+La IA nunca hace ban, kick o lockdown fuerte por sí sola en esta implementación inicial.
+
 ### Información
 - `/avatar`, `/userinfo`, `/serverinfo`, `/roleinfo`, `/channelinfo`
 
@@ -59,6 +76,7 @@ Flujo recomendado:
 - `/announce`, `/poll`, `/snipe`, `/membercount`
 - `/register`, `/unregister`, `/profile`, `/unafk`
 - `/ticket`
+- `/ia`
 - `/ping`, `/help`, `/report`, `/afk`, `/sugerencias`
 
 ### Diversión
@@ -79,6 +97,12 @@ CLIENT_ID=id_del_bot_discord
 CLIENT_SECRET=secret_de_discord_oauth2
 SESSION_SECRET=una_cadena_segura_para_la_sesion
 BASE_URL=http://localhost:3000
+AI_ENABLED=false
+AI_PROVIDER=openai
+AI_MODEL=gpt-5.4-mini
+AI_MAX_INPUT_CHARS=12000
+AI_MAX_OUTPUT_TOKENS=500
+OPENAI_API_KEY=tu_api_key_openai
 ```
 
 ### 3. Registrar comandos

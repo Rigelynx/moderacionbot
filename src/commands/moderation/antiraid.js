@@ -1,17 +1,21 @@
 import {
     ApplicationCommandOptionType,
+    ChannelType,
     EmbedBuilder,
     PermissionFlagsBits
 } from 'discord.js';
-import { getAntiRaidConfig, updateAntiRaidConfig } from '../../utils/config.js';
+import { getAiConfig, getAntiRaidConfig, updateAntiRaidConfig } from '../../utils/config.js';
 import {
     ANTI_RAID_LEVELS,
     activateAntiRaidPanic,
     getAntiRaidLevelLabel,
     getAntiRaidLevelValue,
     getAntiRaidStatusSummary,
-    normalizeAntiRaidLevel
+    normalizeAntiRaidLevel,
+    publishAntiRaidPanel,
+    refreshAntiRaidPanelMessage
 } from '../../utils/antiRaid.js';
+import { summarizeAntiRaidStatus } from '../../utils/aiAntiRaid.js';
 
 const baseLevelChoices = [
     { name: 'Monitor', value: 'monitor' },
@@ -127,6 +131,25 @@ export const command = {
             type: ApplicationCommandOptionType.Subcommand
         },
         {
+            name: 'resumen',
+            description: 'Genera un resumen IA del estado anti-raid',
+            type: ApplicationCommandOptionType.Subcommand
+        },
+        {
+            name: 'panel',
+            description: 'Publica o refresca el panel interactivo del anti-raid',
+            type: ApplicationCommandOptionType.Subcommand,
+            options: [
+                {
+                    name: 'canal',
+                    description: 'Canal donde publicar o refrescar el panel',
+                    type: ApplicationCommandOptionType.Channel,
+                    required: false,
+                    channel_types: [ChannelType.GuildText, ChannelType.GuildAnnouncement]
+                }
+            ]
+        },
+        {
             name: 'enable',
             description: 'Activar el sistema anti-raid',
             type: ApplicationCommandOptionType.Subcommand
@@ -232,12 +255,58 @@ export const command = {
             return interaction.reply({ embeds: [createStatusEmbed(guildId)], flags: 64 });
         }
 
+        if (subcommand === 'resumen') {
+            const aiConfig = getAiConfig(guildId);
+            if (aiConfig.antiRaidMode === 'off') {
+                return interaction.reply({
+                    content: '❌ La IA anti-raid esta en modo `off`. Usa `/ia config modo_antiraid:assist`.',
+                    flags: 64
+                });
+            }
+
+            await interaction.deferReply({ flags: 64 });
+            const status = getAntiRaidStatusSummary(guildId);
+            const result = await summarizeAntiRaidStatus(guildId, status);
+
+            if (!result.ok) {
+                return interaction.editReply({ content: `❌ ${result.reason}` });
+            }
+
+            const embed = new EmbedBuilder()
+                .setColor(0x2B2D42)
+                .setTitle('🧠 Resumen IA Anti-Raid')
+                .setDescription(result.text.slice(0, 4000))
+                .setFooter({ text: 'Asistente IA: no ejecuta acciones automaticamente.' })
+                .setTimestamp();
+
+            return interaction.editReply({ embeds: [embed] });
+        }
+
+        if (subcommand === 'panel') {
+            const targetChannel = interaction.options.getChannel('canal') || interaction.channel;
+
+            if (!targetChannel?.isTextBased()) {
+                return interaction.reply({
+                    content: '❌ El panel solo puede publicarse en un canal de texto.',
+                    flags: 64
+                });
+            }
+
+            await interaction.deferReply({ flags: 64 });
+            const panelMessage = await publishAntiRaidPanel(interaction.guild, targetChannel);
+
+            return interaction.editReply({
+                content: `✅ Panel anti-raid publicado o actualizado en ${targetChannel}.\nMensaje: https://discord.com/channels/${interaction.guild.id}/${targetChannel.id}/${panelMessage.id}`
+            });
+        }
+
         if (subcommand === 'enable') {
             const current = getAntiRaidConfig(guildId);
             const updated = updateAntiRaidConfig(guildId, {
                 enabled: true,
                 currentLevel: current.baseLevel
             });
+            await refreshAntiRaidPanelMessage(interaction.guild);
 
             return interaction.reply({
                 embeds: [createConfigEmbed(updated, '✅ Anti-Raid activado')],
@@ -249,6 +318,7 @@ export const command = {
             const updated = updateAntiRaidConfig(guildId, {
                 enabled: false
             });
+            await refreshAntiRaidPanelMessage(interaction.guild);
 
             return interaction.reply({
                 embeds: [createConfigEmbed(updated, '⛔ Anti-Raid desactivado')],
@@ -269,6 +339,7 @@ export const command = {
                 baseLevel: levelValue,
                 currentLevel: current.currentLevel === ANTI_RAID_LEVELS.PANIC ? ANTI_RAID_LEVELS.PANIC : levelValue
             });
+            await refreshAntiRaidPanelMessage(interaction.guild);
 
             return interaction.reply({
                 embeds: [createConfigEmbed(updated, `🎚️ Nivel base cambiado a ${getAntiRaidLevelLabel(levelValue)}`)],
@@ -339,6 +410,7 @@ export const command = {
             }
 
             const updated = updateAntiRaidConfig(guildId, updates);
+            await refreshAntiRaidPanelMessage(interaction.guild);
             return interaction.reply({
                 embeds: [createConfigEmbed(updated)],
                 flags: 64
@@ -354,6 +426,7 @@ export const command = {
                 durationMinutes: minutes,
                 actorTag: interaction.user.tag
             });
+            await refreshAntiRaidPanelMessage(interaction.guild);
 
             return interaction.reply({
                 embeds: [createConfigEmbed(updated, '🔴 Modo Panic activado')],
@@ -367,6 +440,7 @@ export const command = {
                 reason,
                 actorTag: interaction.user.tag
             });
+            await refreshAntiRaidPanelMessage(interaction.guild);
 
             return interaction.reply({
                 embeds: [createConfigEmbed(updated, '🟢 Anti-Raid vuelto al nivel base')],
@@ -412,6 +486,7 @@ export const command = {
             const updated = updateAntiRaidConfig(guildId, {
                 [target.key]: list
             });
+            await refreshAntiRaidPanelMessage(interaction.guild);
 
             return interaction.reply({
                 content: subcommand === 'whitelist_add'

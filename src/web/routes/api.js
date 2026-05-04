@@ -532,10 +532,10 @@ export function createApiRouter(client) {
 
     // Delete user registration
     router.delete('/guilds/:id/users/:userId', requireAuth, requireGuildAdmin(client), async (req, res) => {
-        const { userId } = req.params;
+        const { id: guildId, userId } = req.params;
         try {
             const { unregisterUser } = await import('../../utils/users.js');
-            const success = unregisterUser(userId);
+            const success = unregisterUser(guildId, userId);
             
             if (success) {
                 res.json({ success: true, message: 'Usuario eliminado' });

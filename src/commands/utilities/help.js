@@ -24,6 +24,7 @@ export const command = {
 \`/unwarn @usuario [número]\` - Quitar advertencia
 \`/warnings [@usuario]\` - Ver advertencias
 \`/clear <cantidad>\` - Eliminar mensajes
+\`/modai analizar|explicar|incidente\` - Asistente IA para staff
 \`/setnick @usuario [apodo]\` - Cambiar apodo
 \`/removenick @usuario\` - Quitar apodo`, inline: false },
                 { name: '👋 Bienvenidas / Despedidas', value: `
@@ -42,6 +43,7 @@ export const command = {
 \`/logs status\` - Ver estado de logs`, inline: false },
                 { name: '🛡️ Anti-Raid', value: `
 \`/antiraid status\` - Ver estado actual
+\`/antiraid resumen\` - Resumen IA del estado
 \`/antiraid enable|disable\` - Activar o apagar
 \`/antiraid level <nivel>\` - Cambiar nivel base
 \`/antiraid config ...\` - Ajustar spam, joins y Panic
@@ -73,9 +75,11 @@ export const command = {
 \`/register\` - Registrarte en el bot
 \`/unregister\` - Eliminar registro
 \`/profile [@usuario]\` - Ver perfil visual
+\`/verify status|config|setup\` - Verificación web con rol
+\`/ia status|config\` - Configurar funciones IA
 \`/ticket setup|status|config|panel|mensaje\` - Panel y configuración
 \`/ticket tipos|tipo_add|tipo_edit|tipo_remove\` - Tipos de ticket
-\`/ticket claim|assign|priority|rename|add|remove|close\` - Gestión interna
+\`/ticket claim|assign|priority|rename|add|remove|ia_resumen|ia_respuesta|close\` - Gestión interna
 \`/ping\` - Ver latencia
 \`/help\` - Mostrar ayuda
 \`/report @usuario <razón>\` - Reportar
@@ -85,7 +89,7 @@ export const command = {
                 { name: '🌐 Dashboard Web', value: `
 Warnings, usuarios registrados, logs, permisos opcionales por comando y apariencia visual del bot por servidor.`, inline: false },
                 { name: '🎮 Diversión', value: `
-\`/8ball <pregunta>\` - Bola mágica
+\`/8ball <pregunta> [modo]\` - Bola mágica clásica o IA
 \`/coinflip\` - Cara o cruz
 \`/rps <elección>\` - Piedra, papel, tijeras`, inline: false }
             )

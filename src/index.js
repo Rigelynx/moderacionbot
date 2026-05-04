@@ -10,6 +10,7 @@ import { loadTickets } from './utils/ticketStore.js';
 import { loadWarnings } from './utils/warnings.js';
 import { loadTempBans, startTempBanChecker } from './utils/tempbans.js';
 import { loadUsers } from './utils/users.js';
+import { loadVerificationStore } from './utils/verificationStore.js';
 import { startAntiRaidWatcher } from './utils/antiRaid.js';
 import { startWebServer } from './web/server.js';
 
@@ -88,6 +89,7 @@ client.on('guildCreate', async (guild) => {
         loadWarnings();
         loadTempBans();
         loadUsers();
+        loadVerificationStore();
         await loadCommands();
         await loadEvents();
         await client.login(process.env.TOKEN);

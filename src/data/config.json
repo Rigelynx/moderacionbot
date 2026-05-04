@@ -6,14 +6,14 @@
         "channelName": "logs-moderacion"
       },
       "welcome": {
-        "enabled": false,
-        "channelId": null,
+        "enabled": true,
+        "channelId": "1500333994498326710",
         "message": "¡Bienvenido/a {user} a **{server}**! Eres el miembro #{count} 🎉",
         "backgroundUrl": null
       },
       "goodbye": {
-        "enabled": false,
-        "channelId": null,
+        "enabled": true,
+        "channelId": "1500334031319859240",
         "message": "**{user}** ha abandonado **{server}**. Ahora somos {count} 😢",
         "backgroundUrl": null
       },
@@ -62,7 +62,58 @@
       },
       "suggestions": {
         "channelId": null
-      }
+      },
+      "appearance": {
+        "botDisplayName": "",
+        "botDescription": "Panel personalizable para gestionar tu bot y tu servidor.",
+        "accentColor": "#5865F2",
+        "dashboardBackgroundUrl": null,
+        "profileBackgroundUrl": null
+      },
+      "antiRaid": {
+        "enabled": true,
+        "baseLevel": 1,
+        "currentLevel": 1,
+        "panicUntil": 0,
+        "panicReason": null,
+        "panelChannelId": "1479155095693431007",
+        "panelMessageId": "1500652320852152400",
+        "whitelistUserIds": [],
+        "whitelistRoleIds": [],
+        "whitelistChannelIds": [],
+        "messageSpam": {
+          "enabled": true,
+          "maxMessages": 6,
+          "intervalSeconds": 8,
+          "timeoutMinutes": 10
+        },
+        "duplicateSpam": {
+          "enabled": true,
+          "maxDuplicates": 3,
+          "intervalSeconds": 15,
+          "timeoutMinutes": 15
+        },
+        "mentionSpam": {
+          "enabled": true,
+          "maxMentions": 5,
+          "blockEveryone": true,
+          "timeoutMinutes": 20
+        },
+        "joinRaid": {
+          "enabled": true,
+          "warningJoins": 6,
+          "dangerJoins": 10,
+          "intervalSeconds": 30,
+          "newAccountDays": 7,
+          "suspiciousTimeoutMinutes": 30
+        },
+        "panic": {
+          "autoActivateOnDanger": true,
+          "autoNormalizeMinutes": 15,
+          "messageMultiplierPercent": 70
+        }
+      },
+      "commandPermissions": {}
     },
     "1482093098245820637": {
       "logs": {
@@ -126,7 +177,58 @@
       },
       "suggestions": {
         "channelId": null
-      }
+      },
+      "appearance": {
+        "botDisplayName": "",
+        "botDescription": "Panel personalizable para gestionar tu bot y tu servidor.",
+        "accentColor": "#5865F2",
+        "dashboardBackgroundUrl": null,
+        "profileBackgroundUrl": null
+      },
+      "antiRaid": {
+        "enabled": false,
+        "baseLevel": 1,
+        "currentLevel": 0,
+        "panicUntil": null,
+        "panicReason": null,
+        "panelChannelId": null,
+        "panelMessageId": null,
+        "whitelistUserIds": [],
+        "whitelistRoleIds": [],
+        "whitelistChannelIds": [],
+        "messageSpam": {
+          "enabled": true,
+          "maxMessages": 6,
+          "intervalSeconds": 8,
+          "timeoutMinutes": 10
+        },
+        "duplicateSpam": {
+          "enabled": true,
+          "maxDuplicates": 3,
+          "intervalSeconds": 15,
+          "timeoutMinutes": 15
+        },
+        "mentionSpam": {
+          "enabled": true,
+          "maxMentions": 5,
+          "blockEveryone": true,
+          "timeoutMinutes": 20
+        },
+        "joinRaid": {
+          "enabled": true,
+          "warningJoins": 6,
+          "dangerJoins": 10,
+          "intervalSeconds": 30,
+          "newAccountDays": 7,
+          "suspiciousTimeoutMinutes": 30
+        },
+        "panic": {
+          "autoActivateOnDanger": true,
+          "autoNormalizeMinutes": 15,
+          "messageMultiplierPercent": 70
+        }
+      },
+      "commandPermissions": {}
     },
     "1482280105379102792": {
       "logs": {
@@ -190,7 +292,58 @@
       },
       "suggestions": {
         "channelId": null
-      }
+      },
+      "appearance": {
+        "botDisplayName": "",
+        "botDescription": "Panel personalizable para gestionar tu bot y tu servidor.",
+        "accentColor": "#5865F2",
+        "dashboardBackgroundUrl": null,
+        "profileBackgroundUrl": null
+      },
+      "antiRaid": {
+        "enabled": false,
+        "baseLevel": 1,
+        "currentLevel": 0,
+        "panicUntil": null,
+        "panicReason": null,
+        "panelChannelId": null,
+        "panelMessageId": null,
+        "whitelistUserIds": [],
+        "whitelistRoleIds": [],
+        "whitelistChannelIds": [],
+        "messageSpam": {
+          "enabled": true,
+          "maxMessages": 6,
+          "intervalSeconds": 8,
+          "timeoutMinutes": 10
+        },
+        "duplicateSpam": {
+          "enabled": true,
+          "maxDuplicates": 3,
+          "intervalSeconds": 15,
+          "timeoutMinutes": 15
+        },
+        "mentionSpam": {
+          "enabled": true,
+          "maxMentions": 5,
+          "blockEveryone": true,
+          "timeoutMinutes": 20
+        },
+        "joinRaid": {
+          "enabled": true,
+          "warningJoins": 6,
+          "dangerJoins": 10,
+          "intervalSeconds": 30,
+          "newAccountDays": 7,
+          "suspiciousTimeoutMinutes": 30
+        },
+        "panic": {
+          "autoActivateOnDanger": true,
+          "autoNormalizeMinutes": 15,
+          "messageMultiplierPercent": 70
+        }
+      },
+      "commandPermissions": {}
     }
   }
 }

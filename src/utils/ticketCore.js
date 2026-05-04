@@ -12,8 +12,9 @@ import {
     TextInputStyle
 } from 'discord.js';
 import discordTranscripts from 'discord-html-transcripts';
-import { getTicketsConfig } from './config.js';
+import { getAiConfig, getTicketsConfig } from './config.js';
 import { sendLog } from './embeds.js';
+import { summarizeTicketClose, suggestTicketReply } from './aiTickets.js';
 import {
     createTicketRecord,
     deleteTicketRecord,
@@ -169,7 +170,14 @@ function formatTemplate(template, values) {
 }
 
 async function respond(interaction, payload) {
-    if (interaction.replied || interaction.deferred) {
+    if (interaction.deferred && !interaction.replied) {
+        const nextPayload = { ...payload };
+        delete nextPayload.flags;
+        delete nextPayload.ephemeral;
+        return interaction.editReply(nextPayload).catch(() => null);
+    }
+
+    if (interaction.replied) {
         return interaction.followUp(payload).catch(() => null);
     }
 
@@ -348,6 +356,34 @@ function buildTicketLogEmbed({ channel, actorTag, reason, resolution, ticketReco
             { name: 'Razon', value: truncate(reason || 'No especificada', 1024), inline: false },
             { name: 'Resumen final', value: truncate(resolution || 'No se adjunto resumen final.', 1024), inline: false }
         )
+        .setTimestamp();
+}
+
+async function collectRecentTicketMessages(channel, limit = 18) {
+    const fetched = await channel.messages.fetch({ limit }).catch(() => null);
+    if (!fetched) return [];
+
+    return [...fetched.values()]
+        .reverse()
+        .filter(message => !message.author?.bot || message.content)
+        .map(message => ({
+            author: message.member?.displayName || message.author?.tag || 'Usuario',
+            content: truncate(
+                message.content?.trim() ||
+                (message.attachments?.size ? `[${message.attachments.size} adjunto(s)]` : '[sin texto]'),
+                500
+            )
+        }))
+        .filter(message => message.content)
+        .slice(-limit);
+}
+
+function buildAiTicketEmbed(title, text, footer) {
+    return new EmbedBuilder()
+        .setColor(0x2B2D42)
+        .setTitle(title)
+        .setDescription(truncate(text, 4000))
+        .setFooter({ text: footer })
         .setTimestamp();
 }
 
@@ -919,11 +955,30 @@ export async function handleTicketClose(interaction, options = {}) {
         console.error('Error generando transcript:', error);
     }
 
+    let finalResolution = resolution;
+    const aiConfig = getAiConfig(interaction.guild.id);
+
+    if (aiConfig.ticketMode === 'auto') {
+        const recentMessages = await collectRecentTicketMessages(channel);
+        const aiSummary = await summarizeTicketClose(interaction.guild.id, {
+            ticketRecord,
+            recentMessages,
+            reason,
+            resolution
+        });
+
+        if (aiSummary.ok) {
+            finalResolution = finalResolution
+                ? `${finalResolution}\n\nResumen IA:\n${aiSummary.text}`
+                : `Resumen IA:\n${aiSummary.text}`;
+        }
+    }
+
     const logEmbed = buildTicketLogEmbed({
         channel,
         actorTag: interaction.user.tag,
         reason: reason || 'No especificada',
-        resolution,
+        resolution: finalResolution,
         ticketRecord
     });
 
@@ -952,6 +1007,69 @@ export async function handleTicketClose(interaction, options = {}) {
             flags: 64
         });
     }
+}
+
+export async function handleTicketAiSummary(interaction) {
+    const config = getTicketsConfig(interaction.guild.id);
+    const ticketRecord = await requireTicketChannel(interaction, config);
+    if (!ticketRecord) return;
+
+    if (!isSupportMember(interaction.member, config, ticketRecord)) {
+        return respond(interaction, { content: '❌ Solo el staff puede pedir resumen IA del ticket.', flags: 64 });
+    }
+
+    await respond(interaction, {
+        content: '🧠 Generando resumen IA del ticket...',
+        flags: 64
+    });
+
+    const recentMessages = await collectRecentTicketMessages(interaction.channel, 25);
+    const result = await summarizeTicketClose(interaction.guild.id, {
+        ticketRecord,
+        recentMessages,
+        reason: 'Resumen manual solicitado por staff',
+        resolution: ''
+    });
+
+    if (!result.ok) {
+        return respond(interaction, { content: `❌ ${result.reason}`, flags: 64 });
+    }
+
+    return respond(interaction, {
+        embeds: [buildAiTicketEmbed('🧠 Resumen IA del Ticket', result.text, 'Resumen asistido: revisa antes de usar en logs.')],
+        flags: 64
+    });
+}
+
+export async function handleTicketAiReply(interaction, extraContext = '') {
+    const config = getTicketsConfig(interaction.guild.id);
+    const ticketRecord = await requireTicketChannel(interaction, config);
+    if (!ticketRecord) return;
+
+    if (!isSupportMember(interaction.member, config, ticketRecord)) {
+        return respond(interaction, { content: '❌ Solo el staff puede pedir respuestas IA del ticket.', flags: 64 });
+    }
+
+    await respond(interaction, {
+        content: '🧠 Preparando sugerencias de respuesta...',
+        flags: 64
+    });
+
+    const recentMessages = await collectRecentTicketMessages(interaction.channel, 25);
+    const result = await suggestTicketReply(interaction.guild.id, {
+        ticketRecord,
+        recentMessages,
+        extraContext
+    });
+
+    if (!result.ok) {
+        return respond(interaction, { content: `❌ ${result.reason}`, flags: 64 });
+    }
+
+    return respond(interaction, {
+        embeds: [buildAiTicketEmbed('💬 Respuestas IA Sugeridas', result.text, 'No se envio nada al canal: copia y edita si te sirve.')],
+        flags: 64
+    });
 }
 
 export function memberCanManageTickets(member, config, ticketRecord = null) {

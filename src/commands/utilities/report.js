@@ -1,5 +1,6 @@
 import { EmbedBuilder } from 'discord.js';
 import { sendLog } from '../../utils/embeds.js';
+import { classifyReport } from '../../utils/aiModeration.js';
 
 export const command = {
     name: 'report',
@@ -19,8 +20,16 @@ export const command = {
         }
     ],
     async execute(interaction, client) {
+        await interaction.deferReply({ flags: 64 });
+
         const usuario = interaction.options.getUser('usuario');
         const razon = interaction.options.getString('razon');
+        const aiClassification = await classifyReport(interaction.guild.id, {
+            reporterTag: interaction.user.tag,
+            targetTag: usuario.tag,
+            channelName: interaction.channel?.name || 'desconocido',
+            reason: razon
+        });
 
         const embed = new EmbedBuilder()
             .setTitle('🚨 Nuevo Reporte de Usuario')
@@ -33,13 +42,22 @@ export const command = {
             )
             .setTimestamp();
 
+        if (aiClassification.ok) {
+            const data = aiClassification.json;
+            embed.addFields(
+                { name: 'Clasificacion IA', value: `${data.categoria || 'otro'} · Prioridad ${data.prioridad || 'media'}`, inline: true },
+                { name: 'Resumen IA', value: String(data.resumen || 'Sin resumen').slice(0, 1024), inline: false },
+                { name: 'Accion sugerida IA', value: String(data.accion_sugerida || 'Revisar manualmente').slice(0, 1024), inline: false }
+            );
+        }
+
         // Enviar a logs
         const logResult = await sendLog(interaction.guild, { embeds: [embed] }, client);
         
         if (logResult) {
-            await interaction.reply({ content: '✅ Tu reporte ha sido enviado confidencialmente al Staff.', flags: 64 });
+            await interaction.editReply({ content: '✅ Tu reporte ha sido enviado confidencialmente al Staff.' });
         } else {
-            await interaction.reply({ content: '❌ Los logs del servidor están desactivados, contacta a un administrador para tu reporte.', flags: 64 });
+            await interaction.editReply({ content: '❌ Los logs del servidor están desactivados, contacta a un administrador para tu reporte.' });
         }
     }
 };

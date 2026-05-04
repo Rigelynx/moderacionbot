@@ -34,7 +34,7 @@ export const command = {
         },
         {
             name: 'message',
-            description: 'Cambiar el mensaje de bienvenida. Variables: {user} {mention} {displayName} {username} {server} {count}',
+            description: 'Cambiar el mensaje de bienvenida. Ver variables en /welcome status',
             type: 1,
             options: [
                 {
