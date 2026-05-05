@@ -131,12 +131,14 @@ function createDefaultAiConfig() {
     return {
         enabled: false,
         provider: 'openai',
-        model: 'gpt-5.4-mini',
+        model: null,
+        baseUrl: null,
         ticketMode: 'manual',
         moderationMode: 'assist',
         antiRaidMode: 'assist',
         maxRequestsPerHour: 100,
         logPrompts: false,
+        apiKey: null,
         features: {
             ticketSummary: true,
             ticketReplyAssist: false,
@@ -271,15 +273,19 @@ function normalizeAiConfig(section = {}) {
 
     return {
         enabled: typeof section.enabled === 'boolean' ? section.enabled : defaults.enabled,
-        provider: normalizeChoice(section.provider, ['openai'], defaults.provider),
+        provider: normalizeChoice(section.provider, ['openai', 'deepseek', 'gemini', 'claude', 'groq', 'mistral', 'openrouter', 'grok', 'custom'], defaults.provider),
         model: typeof section.model === 'string' && section.model.trim()
             ? section.model.trim().slice(0, 80)
             : defaults.model,
+        baseUrl: typeof section.baseUrl === 'string' && section.baseUrl.trim()
+            ? section.baseUrl.trim().replace(/\/+$/, '')
+            : defaults.baseUrl,
         ticketMode: normalizeChoice(section.ticketMode, ['off', 'manual', 'auto'], defaults.ticketMode),
         moderationMode: normalizeChoice(section.moderationMode, ['off', 'monitor', 'assist', 'soft-action'], defaults.moderationMode),
         antiRaidMode: normalizeChoice(section.antiRaidMode, ['off', 'monitor', 'assist', 'adaptive'], defaults.antiRaidMode),
         maxRequestsPerHour: clampInteger(section.maxRequestsPerHour, 1, 1000, defaults.maxRequestsPerHour),
         logPrompts: typeof section.logPrompts === 'boolean' ? section.logPrompts : defaults.logPrompts,
+        apiKey: typeof section.apiKey === 'string' && section.apiKey.trim() ? section.apiKey.trim() : defaults.apiKey,
         features
     };
 }

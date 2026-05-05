@@ -113,7 +113,38 @@
           "messageMultiplierPercent": 70
         }
       },
-      "commandPermissions": {}
+      "commandPermissions": {},
+      "verification": {
+        "enabled": true,
+        "roleId": "1500190501700243589",
+        "panelChannelId": "1479260581381799967",
+        "panelMessageId": "1501031787768316047",
+        "minAccountAgeDays": 1,
+        "panelTitle": "ss",
+        "panelDescription": "11",
+        "panelButtonLabel": "si papu"
+      },
+      "ai": {
+        "enabled": false,
+        "provider": "openai",
+        "model": "gpt-5.4-mini",
+        "ticketMode": "manual",
+        "moderationMode": "assist",
+        "antiRaidMode": "assist",
+        "maxRequestsPerHour": 100,
+        "logPrompts": false,
+        "features": {
+          "ticketSummary": true,
+          "ticketReplyAssist": false,
+          "reportClassification": true,
+          "smartModeration": false,
+          "moderationExplanation": false,
+          "moderationIncidentSummary": false,
+          "smartAntiRaid": false,
+          "antiRaidIncidentSummary": true,
+          "fun8ball": true
+        }
+      }
     },
     "1482093098245820637": {
       "logs": {
@@ -228,7 +259,38 @@
           "messageMultiplierPercent": 70
         }
       },
-      "commandPermissions": {}
+      "commandPermissions": {},
+      "verification": {
+        "enabled": false,
+        "roleId": null,
+        "panelChannelId": null,
+        "panelMessageId": null,
+        "minAccountAgeDays": 0,
+        "panelTitle": "Verificación del servidor",
+        "panelDescription": "Pulsa el botón para abrir la verificación web y obtener acceso completo al servidor.",
+        "panelButtonLabel": "Verificarme"
+      },
+      "ai": {
+        "enabled": false,
+        "provider": "openai",
+        "model": "gpt-5.4-mini",
+        "ticketMode": "manual",
+        "moderationMode": "assist",
+        "antiRaidMode": "assist",
+        "maxRequestsPerHour": 100,
+        "logPrompts": false,
+        "features": {
+          "ticketSummary": true,
+          "ticketReplyAssist": false,
+          "reportClassification": true,
+          "smartModeration": false,
+          "moderationExplanation": false,
+          "moderationIncidentSummary": false,
+          "smartAntiRaid": false,
+          "antiRaidIncidentSummary": true,
+          "fun8ball": true
+        }
+      }
     },
     "1482280105379102792": {
       "logs": {
@@ -343,7 +405,38 @@
           "messageMultiplierPercent": 70
         }
       },
-      "commandPermissions": {}
+      "commandPermissions": {},
+      "verification": {
+        "enabled": false,
+        "roleId": null,
+        "panelChannelId": null,
+        "panelMessageId": null,
+        "minAccountAgeDays": 0,
+        "panelTitle": "Verificación del servidor",
+        "panelDescription": "Pulsa el botón para abrir la verificación web y obtener acceso completo al servidor.",
+        "panelButtonLabel": "Verificarme"
+      },
+      "ai": {
+        "enabled": false,
+        "provider": "openai",
+        "model": "gpt-5.4-mini",
+        "ticketMode": "manual",
+        "moderationMode": "assist",
+        "antiRaidMode": "assist",
+        "maxRequestsPerHour": 100,
+        "logPrompts": false,
+        "features": {
+          "ticketSummary": true,
+          "ticketReplyAssist": false,
+          "reportClassification": true,
+          "smartModeration": false,
+          "moderationExplanation": false,
+          "moderationIncidentSummary": false,
+          "smartAntiRaid": false,
+          "antiRaidIncidentSummary": true,
+          "fun8ball": true
+        }
+      }
     }
   }
 }
