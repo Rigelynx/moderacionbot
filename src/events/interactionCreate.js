@@ -14,6 +14,7 @@ import {
 } from '../utils/antiRaid.js';
 import { getVerificationButtonId, handleVerificationButton } from '../utils/verification.js';
 import { checkCommandAccess } from '../utils/commandPermissions.js';
+import { handleHelpButton } from '../commands/utilities/help.js';
 
 const ticketButtons = getTicketButtonIds();
 const verificationButtonId = getVerificationButtonId();
@@ -27,6 +28,9 @@ export default {
             try {
                 if (interaction.customId.startsWith('antiRaid:')) {
                     return await handleAntiRaidButton(interaction, client);
+                }
+                if (interaction.customId.startsWith('help:')) {
+                    return await handleHelpButton(interaction, client);
                 }
                 if (interaction.customId === verificationButtonId) {
                     return await handleVerificationButton(interaction);
