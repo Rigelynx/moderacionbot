@@ -43,7 +43,7 @@ export function getVerificationButtonId() {
 export function createVerificationPanelPayload(guild) {
     const config = getVerificationConfig(guild.id);
     const minAgeText = config.minAccountAgeDays > 0
-        ? `La cuenta debe tener al menos **${config.minAccountAgeDays} día(s)**.`
+        ? `La cuenta debe tener una antigüedad mínima de **${config.minAccountAgeDays} día(s)**.`
         : 'No hay requisito mínimo de antigüedad de cuenta.';
 
     const embed = new EmbedBuilder()
@@ -52,7 +52,7 @@ export function createVerificationPanelPayload(guild) {
         .setDescription(config.panelDescription)
         .addFields(
             { name: 'Proceso', value: 'Abre el portal web, completa la comprobación humana y el bot te asignará el rol automáticamente.', inline: false },
-            { name: 'Requisito de cuenta', value: minAgeText, inline: false },
+            { name: 'Antigüedad mínima de cuenta', value: minAgeText, inline: false },
             { name: 'Rol a recibir', value: config.roleId ? `<@&${config.roleId}>` : 'No configurado', inline: false }
         )
         .setFooter({ text: 'La sesión de verificación expira en 15 minutos.' })

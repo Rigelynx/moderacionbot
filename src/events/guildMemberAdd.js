@@ -1,4 +1,4 @@
-import { getWelcomeConfig } from '../utils/config.js';
+import { getVerificationConfig, getWelcomeConfig } from '../utils/config.js';
 import { generateCard, replaceMemberPlaceholders } from '../utils/welcomeCard.js';
 import { sendLog } from '../utils/embeds.js';
 import { EmbedBuilder } from 'discord.js';
@@ -11,6 +11,22 @@ export default {
     async execute(member, client) {
         const antiRaidResult = await handleGuildMemberAddAntiRaid(member, client);
         if (antiRaidResult.suppressWelcome) return;
+
+        const verificationConfig = getVerificationConfig(member.guild.id);
+        const joinRoleId = verificationConfig?.joinRoleId || null;
+        if (joinRoleId) {
+            const joinRole = member.guild.roles.cache.get(joinRoleId);
+            const botMember = member.guild.members.me;
+
+            if (
+                joinRole &&
+                botMember?.permissions?.has('ManageRoles') &&
+                botMember.roles.highest.comparePositionTo(joinRole) > 0 &&
+                !member.roles.cache.has(joinRole.id)
+            ) {
+                await member.roles.add(joinRole.id, 'Rol automático asignado al unirse al servidor').catch(() => null);
+            }
+        }
 
         const config = getWelcomeConfig(member.guild.id);
         if (!config?.enabled || !config?.channelId) return;

@@ -1,101 +1,106 @@
-import { EmbedBuilder } from 'discord.js';
+import { EmbedBuilder, PermissionsBitField } from 'discord.js';
+import { checkCommandAccess } from '../../utils/commandPermissions.js';
+
+const CATEGORY_META = {
+    moderation: { emoji: '🛡️', title: 'Moderación' },
+    utilities: { emoji: '🧰', title: 'Utilidades' },
+    info: { emoji: '📘', title: 'Información' },
+    fun: { emoji: '🎮', title: 'Diversión' },
+    general: { emoji: '✨', title: 'General' }
+};
+
+const COMMAND_PREVIEWS = {
+    antiraid: 'defensa por niveles',
+    ban: 'banear usuarios',
+    clear: 'limpiar mensajes',
+    help: 'ver esta guía',
+    ia: 'ajustes de IA',
+    kick: 'expulsar usuarios',
+    logs: 'ajustar logs',
+    membercount: 'ver miembros',
+    modai: 'asistente para staff',
+    ping: 'latencia del bot',
+    profile: 'perfil visual',
+    report: 'reportar al staff',
+    role: 'gestión de roles',
+    serverinfo: 'datos del servidor',
+    ticket: 'soporte y tickets',
+    verify: 'verificación web',
+    warnings: 'historial de warns',
+    welcome: 'bienvenidas',
+    goodbye: 'despedidas'
+};
+
+function canUseByDiscordPermission(interaction, command) {
+    if (!command?.default_member_permissions) {
+        return true;
+    }
+
+    try {
+        const required = new PermissionsBitField(BigInt(command.default_member_permissions));
+        return interaction.memberPermissions?.has(required, true) ?? false;
+    } catch {
+        return true;
+    }
+}
+
+function getVisibleCommands(interaction, client) {
+    return [...client.slashCommands.values()]
+        .filter(command => canUseByDiscordPermission(interaction, command))
+        .filter(command => checkCommandAccess(interaction, command.name).allowed)
+        .sort((a, b) => {
+            if ((a.category || 'general') !== (b.category || 'general')) {
+                return (a.category || 'general').localeCompare(b.category || 'general');
+            }
+            return a.name.localeCompare(b.name);
+        });
+}
+
+function buildCategoryField(commands = []) {
+    return commands
+        .slice(0, 8)
+        .map(command => `\`/${command.name}\` ${COMMAND_PREVIEWS[command.name] || command.description || 'Disponible'}`)
+        .join('\n');
+}
 
 export const command = {
     name: 'help',
-    description: 'Mostrar todos los comandos disponibles',
+    description: 'Muestra una ayuda más clara según tus permisos',
     async execute(interaction, client) {
+        const visibleCommands = getVisibleCommands(interaction, client);
+        const grouped = visibleCommands.reduce((acc, item) => {
+            const category = item.category || 'general';
+            if (!acc[category]) acc[category] = [];
+            acc[category].push(item);
+            return acc;
+        }, {});
+
+        const fields = Object.entries(grouped)
+            .map(([category, commands]) => {
+                const meta = CATEGORY_META[category] || CATEGORY_META.general;
+                return {
+                    name: `${meta.emoji} ${meta.title} · ${commands.length}`,
+                    value: buildCategoryField(commands),
+                    inline: false
+                };
+            })
+            .filter(field => field.value);
+
         const embed = new EmbedBuilder()
             .setColor(0x5865f2)
-            .setTitle('📚 Lista de Comandos')
-            .setDescription('Comandos disponibles en este bot y sistemas complementarios del dashboard web')
+            .setTitle('Centro de Ayuda')
+            .setDescription('Aquí ves solo comandos que puedes usar ahora mismo en este servidor.')
             .addFields(
-                { name: '🔨 Moderación', value: `
-\`/ban @usuario [razón]\` - Banear
-\`/softban @usuario [razón]\` - Ban + unban (borra msgs)
-\`/tempban @usuario <tiempo> [razón]\` - Ban temporal
-\`/unban <id> [razón]\` - Desbanear
-\`/untimeban <id> [razón]\` - Quitar ban temporal
-\`/massban <ids> [razón]\` - Banear múltiples
-\`/massunban <ids> [razón]\` - Desbanear múltiples
-\`/kick @usuario [razón]\` - Expulsar
-\`/mute @usuario <cantidad> <unidad>\` - Silenciar
-\`/unmute @usuario\` - Desilenciar
-\`/warn @usuario [razón]\` - Advertir
-\`/unwarn @usuario [número]\` - Quitar advertencia
-\`/warnings [@usuario]\` - Ver advertencias
-\`/clear <cantidad>\` - Eliminar mensajes
-\`/modai analizar|explicar|incidente\` - Asistente IA para staff
-\`/setnick @usuario [apodo]\` - Cambiar apodo
-\`/removenick @usuario\` - Quitar apodo`, inline: false },
-                { name: '👋 Bienvenidas / Despedidas', value: `
-\`/welcome\` - Configurar sistema bienvenida
-\`/goodbye\` - Configurar sistema despedida`, inline: false },
-                { name: '👔 Roles', value: `
-\`/role create <nombre> [color]\` - Crear rol
-\`/role delete <rol>\` - Eliminar rol
-\`/role add @usuario <rol>\` - Añadir rol
-\`/role remove @usuario <rol>\` - Quitar rol
-\`/role list\` - Ver roles`, inline: false },
-                { name: '📝 Logs', value: `
-\`/logs set #canal\` - Cambiar canal de logs
-\`/logs enable\` - Activar logs
-\`/logs disable\` - Desactivar logs
-\`/logs status\` - Ver estado de logs`, inline: false },
-                { name: '🛡️ Anti-Raid', value: `
-\`/antiraid status\` - Ver estado actual
-\`/antiraid resumen\` - Resumen IA del estado
-\`/antiraid enable|disable\` - Activar o apagar
-\`/antiraid level <nivel>\` - Cambiar nivel base
-\`/antiraid config ...\` - Ajustar spam, joins y Panic
-\`/antiraid panic [minutos]\` - Activar Panic temporal
-\`/antiraid normalize\` - Volver al nivel base
-\`/antiraid whitelist_add|remove|list\` - Gestionar exclusiones`, inline: false },
-                { name: '🔐 Permisos', value: `
-\`/perm <tipo> <canal> <rol> <estado>\`
-*Tipos: view, send, embed, manage, speak, react, attach, mention, history, connect, stream, priority*
-*Estado: allow/deny/reset*`, inline: false },
-                { name: '🔒 Canal', value: `
-\`/lock\` - Bloquear canal
-\`/unlock\` - Desbloquear canal
-\`/slowmode <segundos>\` - Modo lento
-\`/lockdown <estado>\` - Bloquear/desbloquear servidor
-\`/nuke\` - Limpiar historial del canal
-\`/vckick @usuario\` - Kickear de Voz`, inline: false },
-                { name: '👤 Info', value: `
-\`/avatar [@usuario]\` - Ver avatar
-\`/userinfo [@usuario]\` - Info de usuario
-\`/serverinfo\` - Info del servidor
-\`/roleinfo <rol>\` - Info detallada de rol
-\`/channelinfo [canal]\` - Info de canal`, inline: false },
-                { name: '📊 Utilidades', value: `
-\`/announce <canal> <titulo> <mensaje>\` - Anuncio
-\`/poll <pregunta> <opciones...>\` - Encuesta
-\`/snipe\` - Último msj eliminado
-\`/membercount\` - Conteo de miembros
-\`/register\` - Registrarte en el bot
-\`/unregister\` - Eliminar registro
-\`/profile [@usuario]\` - Ver perfil visual
-\`/verify status|config|setup\` - Verificación web con rol
-\`/ia status|config\` - Configurar funciones IA
-\`/ticket setup|status|config|panel|mensaje\` - Panel y configuración
-\`/ticket tipos|tipo_add|tipo_edit|tipo_remove\` - Tipos de ticket
-\`/ticket claim|assign|priority|rename|add|remove|ia_resumen|ia_respuesta|close\` - Gestión interna
-\`/ping\` - Ver latencia
-\`/help\` - Mostrar ayuda
-\`/report @usuario <razón>\` - Reportar
-\`/afk [razón]\` - Ponerse ausente
-\`/unafk\` - Quitar tu estado AFK
-\`/sugerencias\` - Sugerencias (enviar/setup)`, inline: false },
-                { name: '🌐 Dashboard Web', value: `
-Warnings, usuarios registrados, logs, permisos opcionales por comando y apariencia visual del bot por servidor.`, inline: false },
-                { name: '🎮 Diversión', value: `
-\`/8ball <pregunta> [modo]\` - Bola mágica clásica o IA
-\`/coinflip\` - Cara o cruz
-\`/rps <elección>\` - Piedra, papel, tijeras`, inline: false }
+                {
+                    name: 'Accesos rápidos',
+                    value: 'Usa el dashboard para restringir comandos por rol o canal.\nUsa `/verify config` para verificación y rol automático al entrar.\nUsa `/ticket status` y `/antiraid status` para revisar sistemas clave.',
+                    inline: false
+                },
+                ...fields
             )
-            .setFooter({ text: 'Usa / para ver los comandos de Discord y el dashboard para ajustes visuales/permisos' })
+            .setFooter({ text: `Comandos visibles para ti: ${visibleCommands.length}` })
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed] });
+        await interaction.reply({ embeds: [embed], flags: 64 });
     }
 };

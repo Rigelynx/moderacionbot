@@ -8,6 +8,7 @@ import {
     getConfig,
     getGoodbyeConfig,
     getLogChannelName,
+    getVerificationConfig,
     getWelcomeConfig,
     isLogsEnabled,
     setGoodbyeBackground,
@@ -16,6 +17,7 @@ import {
     setWelcomeBackground,
     updateAppearanceConfig,
     updateAntiRaidConfig,
+    updateVerificationConfig,
     updateCommandPermission,
     clearCommandPermission
 } from '../../utils/config.js';
@@ -248,6 +250,89 @@ export function createApiRouter(client) {
             success: true,
             logsEnabled: isLogsEnabled(guildId),
             logChannel: getLogChannelName(guildId)
+        });
+    });
+
+    router.get('/guilds/:id/verification', requireAuth, requireGuildAdmin(client), (req, res) => {
+        const guildId = req.params.id;
+        res.json(getVerificationConfig(guildId));
+    });
+
+    router.post('/guilds/:id/verification', requireAuth, requireGuildAdmin(client), (req, res) => {
+        const guildId = req.params.id;
+        const guild = req.guild;
+        const body = req.body || {};
+        const updates = {};
+
+        if (typeof body.enabled === 'boolean') {
+            updates.enabled = body.enabled;
+        }
+
+        const roleId = normalizeOptionalText(body.roleId);
+        if (roleId !== undefined) {
+            if (roleId) {
+                const role = guild.roles.cache.get(roleId);
+                if (!role) {
+                    return res.status(400).json({ error: 'El rol verificado no existe en este servidor.' });
+                }
+
+                if (guild.members.me?.roles.highest.comparePositionTo(role) <= 0) {
+                    return res.status(400).json({ error: 'El rol verificado está por encima de mi rol más alto.' });
+                }
+            }
+
+            updates.roleId = roleId || null;
+        }
+
+        const joinRoleId = normalizeOptionalText(body.joinRoleId);
+        if (joinRoleId !== undefined) {
+            if (joinRoleId) {
+                const role = guild.roles.cache.get(joinRoleId);
+                if (!role) {
+                    return res.status(400).json({ error: 'El rol automático al entrar no existe en este servidor.' });
+                }
+
+                if (guild.members.me?.roles.highest.comparePositionTo(role) <= 0) {
+                    return res.status(400).json({ error: 'El rol automático al entrar está por encima de mi rol más alto.' });
+                }
+            }
+
+            updates.joinRoleId = joinRoleId || null;
+        }
+
+        const panelChannelId = normalizeOptionalText(body.panelChannelId);
+        if (panelChannelId !== undefined) {
+            if (panelChannelId && !guild.channels.cache.has(panelChannelId)) {
+                return res.status(400).json({ error: 'El canal del panel no existe en este servidor.' });
+            }
+
+            updates.panelChannelId = panelChannelId || null;
+        }
+
+        const minAccountAgeDays = normalizeInteger(body.minAccountAgeDays, 0, 365);
+        if (minAccountAgeDays !== undefined) {
+            updates.minAccountAgeDays = minAccountAgeDays;
+        }
+
+        const panelTitle = normalizeOptionalText(body.panelTitle);
+        if (panelTitle !== undefined) {
+            updates.panelTitle = panelTitle;
+        }
+
+        const panelDescription = normalizeOptionalText(body.panelDescription);
+        if (panelDescription !== undefined) {
+            updates.panelDescription = panelDescription;
+        }
+
+        const panelButtonLabel = normalizeOptionalText(body.panelButtonLabel);
+        if (panelButtonLabel !== undefined) {
+            updates.panelButtonLabel = panelButtonLabel;
+        }
+
+        const verification = updateVerificationConfig(guildId, updates);
+        res.json({
+            success: true,
+            ...verification
         });
     });
 

@@ -70,6 +70,7 @@ export const command = {
             options: [
                 { name: 'habilitado', description: 'Activa o desactiva la verificación', type: ApplicationCommandOptionType.Boolean, required: false },
                 { name: 'rol_verificado', description: 'Rol que recibirá el usuario verificado', type: ApplicationCommandOptionType.Role, required: false },
+                { name: 'rol_entrada', description: 'Rol automático para nuevos miembros al unirse', type: ApplicationCommandOptionType.Role, required: false },
                 { name: 'canal_panel', description: 'Canal por defecto del panel', type: ApplicationCommandOptionType.Channel, required: false, channel_types: [ChannelType.GuildText, ChannelType.GuildAnnouncement] },
                 { name: 'edad_cuenta_dias', description: 'Edad mínima de la cuenta en días', type: ApplicationCommandOptionType.Integer, required: false, min_value: 0, max_value: 365 },
                 { name: 'titulo', description: 'Título del panel', type: ApplicationCommandOptionType.String, required: false },
@@ -98,9 +99,10 @@ export const command = {
                 .addFields(
                     { name: 'Estado', value: config.enabled ? '✅ Activado' : '❌ Desactivado', inline: true },
                     { name: 'Rol verificado', value: formatRole(config.roleId), inline: true },
+                    { name: 'Rol al entrar', value: formatRole(config.joinRoleId), inline: true },
                     { name: 'Canal del panel', value: formatChannel(config.panelChannelId), inline: true },
                     { name: 'Mensaje del panel', value: config.panelMessageId ? `\`${config.panelMessageId}\`` : 'No publicado', inline: false },
-                    { name: 'Edad mínima de cuenta', value: `${config.minAccountAgeDays} día(s)`, inline: true },
+                    { name: 'Antigüedad mínima de cuenta', value: `${config.minAccountAgeDays} día(s)`, inline: true },
                     { name: 'Título panel', value: config.panelTitle, inline: false },
                     { name: 'Botón', value: config.panelButtonLabel, inline: true },
                     { name: 'Descripción', value: config.panelDescription.slice(0, 1024), inline: false }
@@ -115,6 +117,7 @@ export const command = {
 
             const enabled = interaction.options.getBoolean('habilitado');
             const role = interaction.options.getRole('rol_verificado');
+            const joinRole = interaction.options.getRole('rol_entrada');
             const panelChannel = interaction.options.getChannel('canal_panel');
             const minAccountAgeDays = interaction.options.getInteger('edad_cuenta_dias');
             const title = interaction.options.getString('titulo');
@@ -131,6 +134,16 @@ export const command = {
                 }
 
                 updates.roleId = role.id;
+            }
+            if (joinRole) {
+                if (interaction.guild.members.me.roles.highest.comparePositionTo(joinRole) <= 0) {
+                    return respond(interaction, {
+                        content: '❌ El rol automático de entrada está por encima de mi rol más alto. Muévelo más abajo antes de configurarlo.',
+                        flags: 64
+                    });
+                }
+
+                updates.joinRoleId = joinRole.id;
             }
             if (panelChannel) updates.panelChannelId = panelChannel.id;
             if (typeof minAccountAgeDays === 'number') updates.minAccountAgeDays = minAccountAgeDays;
@@ -151,9 +164,10 @@ export const command = {
                 .setTitle('✅ Configuración de verificación actualizada')
                 .addFields(
                     { name: 'Estado', value: updated.enabled ? 'Activado' : 'Desactivado', inline: true },
-                    { name: 'Rol', value: formatRole(updated.roleId), inline: true },
+                    { name: 'Rol verificado', value: formatRole(updated.roleId), inline: true },
+                    { name: 'Rol al entrar', value: formatRole(updated.joinRoleId), inline: true },
                     { name: 'Canal', value: formatChannel(updated.panelChannelId), inline: true },
-                    { name: 'Edad mínima', value: `${updated.minAccountAgeDays} día(s)`, inline: true },
+                    { name: 'Antigüedad mínima', value: `${updated.minAccountAgeDays} día(s)`, inline: true },
                     { name: 'Título', value: updated.panelTitle, inline: false },
                     { name: 'Botón', value: updated.panelButtonLabel, inline: true }
                 )

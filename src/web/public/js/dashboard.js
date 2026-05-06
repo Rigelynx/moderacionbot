@@ -6,6 +6,7 @@ let currentGuildCommands = [];
 let currentCommandPermissions = {};
 let currentAppearance = null;
 let currentAntiRaid = null;
+let currentVerification = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     checkAuth();
@@ -47,6 +48,7 @@ function showDashboard() {
 
 function bindStaticEventHandlers() {
     document.getElementById('saveConfigBtn').onclick = saveConfig;
+    document.getElementById('saveVerificationBtn').onclick = saveVerification;
     document.getElementById('saveAppearanceBtn').onclick = saveAppearance;
     document.getElementById('savePermissionBtn').onclick = saveCommandPermission;
     document.getElementById('resetPermissionBtn').onclick = resetCommandPermission;
@@ -133,6 +135,7 @@ async function selectGuild(guildId) {
     currentGuildCommands = [];
     currentCommandPermissions = {};
     currentAntiRaid = null;
+    currentVerification = null;
 
     document.querySelectorAll('.server-item').forEach(serverItem => serverItem.classList.remove('active'));
     document.querySelector(`.server-item[data-guild-id="${guildId}"]`)?.classList.add('active');
@@ -442,11 +445,17 @@ async function loadConfig() {
     if (!currentGuildId) return;
 
     try {
-        const res = await fetch(`/api/guilds/${currentGuildId}/config`);
-        const config = await res.json();
+        const [configRes, verificationRes] = await Promise.all([
+            fetch(`/api/guilds/${currentGuildId}/config`),
+            fetch(`/api/guilds/${currentGuildId}/verification`)
+        ]);
+
+        const config = await configRes.json();
+        currentVerification = verificationRes.ok ? await verificationRes.json() : null;
 
         document.getElementById('configLogsEnabled').checked = config.logsEnabled;
         document.getElementById('configLogChannel').value = config.logChannel || '';
+        fillVerificationForm(currentVerification);
     } catch (err) {
         console.error('Error loading config:', err);
     }
@@ -476,6 +485,76 @@ async function saveConfig() {
 
         showStatus(saveStatus, '✅ Guardado correctamente');
     } catch {
+        showStatus(saveStatus, '❌ Error al guardar', true);
+    }
+}
+
+function populateSelectWithEmpty(elementId, items, selectedId, labelGetter, emptyLabel) {
+    const element = document.getElementById(elementId);
+    const options = [`<option value="">${escapeHtml(emptyLabel)}</option>`];
+
+    for (const item of items) {
+        options.push(`
+            <option value="${item.id}" ${selectedId === item.id ? 'selected' : ''}>
+                ${escapeHtml(labelGetter(item))}
+            </option>
+        `);
+    }
+
+    element.innerHTML = options.join('');
+}
+
+function fillVerificationForm(verification) {
+    if (!currentGuildData) return;
+
+    const config = verification || {};
+    document.getElementById('verifyEnabled').checked = Boolean(config.enabled);
+    document.getElementById('verifyMinAccountAgeDays').value = Number(config.minAccountAgeDays || 0);
+    document.getElementById('verifyPanelTitle').value = config.panelTitle || '';
+    document.getElementById('verifyPanelDescription').value = config.panelDescription || '';
+    document.getElementById('verifyPanelButtonLabel').value = config.panelButtonLabel || '';
+
+    populateSelectWithEmpty('verifyRoleId', currentGuildData.roles, config.roleId || '', role => role.name, 'Sin rol verificado');
+    populateSelectWithEmpty('verifyJoinRoleId', currentGuildData.roles, config.joinRoleId || '', role => role.name, 'Sin rol automático');
+    populateSelectWithEmpty('verifyPanelChannelId', currentGuildData.channels, config.panelChannelId || '', channel => `#${channel.name}`, 'Sin canal de panel');
+}
+
+function getVerificationFromInputs() {
+    return {
+        enabled: document.getElementById('verifyEnabled').checked,
+        roleId: document.getElementById('verifyRoleId').value || null,
+        joinRoleId: document.getElementById('verifyJoinRoleId').value || null,
+        panelChannelId: document.getElementById('verifyPanelChannelId').value || null,
+        minAccountAgeDays: Number(document.getElementById('verifyMinAccountAgeDays').value || 0),
+        panelTitle: document.getElementById('verifyPanelTitle').value.trim(),
+        panelDescription: document.getElementById('verifyPanelDescription').value.trim(),
+        panelButtonLabel: document.getElementById('verifyPanelButtonLabel').value.trim()
+    };
+}
+
+async function saveVerification() {
+    if (!currentGuildId) return;
+
+    const payload = getVerificationFromInputs();
+    const saveStatus = document.getElementById('verifySaveStatus');
+    showStatus(saveStatus, 'Guardando...');
+
+    try {
+        const res = await fetch(`/api/guilds/${currentGuildId}/verification`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+            throw new Error('save-verification-failed');
+        }
+
+        currentVerification = await res.json();
+        fillVerificationForm(currentVerification);
+        showStatus(saveStatus, '✅ Verificación guardada');
+    } catch (err) {
+        console.error('Error saving verification:', err);
         showStatus(saveStatus, '❌ Error al guardar', true);
     }
 }

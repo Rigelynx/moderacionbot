@@ -72,6 +72,7 @@ function createDefaultVerificationConfig() {
     return {
         enabled: false,
         roleId: null,
+        joinRoleId: null,
         panelChannelId: null,
         panelMessageId: null,
         minAccountAgeDays: 0,

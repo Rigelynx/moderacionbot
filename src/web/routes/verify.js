@@ -13,21 +13,28 @@ function escapeHtml(value) {
         .replaceAll("'", '&#39;');
 }
 
-function createMathChallenge() {
-    const left = Math.floor(Math.random() * 7) + 3;
-    const right = Math.floor(Math.random() * 6) + 2;
-    const useSubtraction = Math.random() >= 0.5;
+function pickRandom(items) {
+    return items[Math.floor(Math.random() * items.length)];
+}
 
-    if (useSubtraction && left > right) {
-        return {
-            prompt: `${left} - ${right}`,
-            answer: String(left - right)
-        };
-    }
+function createHumanChallenge() {
+    const left = Math.floor(Math.random() * 8) + 4;
+    const right = Math.floor(Math.random() * 7) + 2;
+    const multiplier = Math.floor(Math.random() * 4) + 2;
+    const operators = [
+        { symbol: '+', result: left + right },
+        { symbol: '-', result: left - right },
+        { symbol: '×', result: left * multiplier }
+    ];
+    const math = pickRandom(operators);
+    const verificationCode = Math.random().toString(36).slice(2, 7).toUpperCase();
 
     return {
-        prompt: `${left} + ${right}`,
-        answer: String(left + right)
+        prompt: math.symbol === '×'
+            ? `${left} ${math.symbol} ${multiplier}`
+            : `${left} ${math.symbol} ${right}`,
+        answer: String(math.result),
+        verificationCode
     };
 }
 
@@ -48,6 +55,7 @@ function renderVerificationPage({
     roleName,
     panelDescription,
     challengePrompt,
+    verificationCode,
     expiresAt,
     minAccountAgeDays,
     errorMessage = ''
@@ -56,6 +64,7 @@ function renderVerificationPage({
     const safeRoleName = escapeHtml(roleName);
     const safePanelDescription = escapeHtml(panelDescription);
     const safeChallengePrompt = escapeHtml(challengePrompt);
+    const safeVerificationCode = escapeHtml(verificationCode);
     const safeErrorMessage = escapeHtml(errorMessage);
 
     return `<!DOCTYPE html>
@@ -305,7 +314,7 @@ function renderVerificationPage({
                     <span class="meta-value"><span data-expiry="${expiresAt}">Cargando...</span></span>
                 </div>
                 <div class="meta-card">
-                    <span class="meta-label">Edad mínima</span>
+                    <span class="meta-label">Antigüedad mínima</span>
                     <span class="meta-value">${minAccountAgeDays} día(s)</span>
                 </div>
                 <div class="meta-card">
@@ -317,14 +326,20 @@ function renderVerificationPage({
 
         <section class="panel">
             <h2>Completa la verificación</h2>
-            <p class="panel-copy">Este enlace es personal, temporal y solo sirve para tu cuenta en Discord. Resuelve el reto y el bot intentará darte acceso completo al servidor.</p>
+            <p class="panel-copy">Este enlace es personal, temporal y solo sirve para tu cuenta en Discord. Completa las dos comprobaciones y el bot intentará darte acceso completo al servidor.</p>
             <div class="error" id="errorBox">${safeErrorMessage}</div>
             <form id="verifyForm">
                 <div class="challenge-box">
                     <label>Reto humano</label>
                     <div class="challenge-prompt">${safeChallengePrompt}</div>
                 </div>
-                <input id="answerInput" name="answer" type="text" inputmode="numeric" autocomplete="off" placeholder="Escribe el resultado" required>
+                <div class="challenge-box">
+                    <label>Código visible</label>
+                    <div class="challenge-prompt">${safeVerificationCode}</div>
+                </div>
+                <input id="answerInput" name="answer" type="text" inputmode="numeric" autocomplete="off" placeholder="Escribe el resultado matemático" required>
+                <input id="codeInput" name="code" type="text" autocomplete="off" placeholder="Escribe el código exactamente igual" maxlength="5" required>
+                <input id="websiteInput" name="website" type="text" autocomplete="off" tabindex="-1" style="position:absolute;left:-9999px;opacity:0;" aria-hidden="true">
                 <button id="submitBtn" type="submit">Verificar ahora</button>
             </form>
             <div class="status" id="statusBox"></div>
@@ -337,6 +352,8 @@ function renderVerificationPage({
         const form = document.getElementById('verifyForm');
         const button = document.getElementById('submitBtn');
         const answerInput = document.getElementById('answerInput');
+        const codeInput = document.getElementById('codeInput');
+        const websiteInput = document.getElementById('websiteInput');
 
         function updateExpiry() {
             if (!expiryEl) return;
@@ -368,7 +385,11 @@ function renderVerificationPage({
                 const response = await fetch(window.location.pathname, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ answer: answerInput.value.trim() })
+                    body: JSON.stringify({
+                        answer: answerInput.value.trim(),
+                        code: codeInput.value.trim(),
+                        website: websiteInput.value.trim()
+                    })
                 });
 
                 const payload = await response.json();
@@ -380,6 +401,7 @@ function renderVerificationPage({
                 statusBox.className = 'status success';
                 button.disabled = true;
                 answerInput.disabled = true;
+                codeInput.disabled = true;
             } catch (error) {
                 statusBox.textContent = error.message || 'Error inesperado.';
                 statusBox.className = 'status error';
@@ -440,17 +462,19 @@ export function createVerifyRouter(client) {
                 roleName: role.name,
                 panelDescription: 'Tu cuenta ya estaba verificada. No necesitas completar más pasos.',
                 challengePrompt: '0 + 0',
+                verificationCode: 'READY',
                 expiresAt: Date.now(),
                 minAccountAgeDays: config.minAccountAgeDays,
                 errorMessage: 'Ya tienes acceso completo. Puedes volver a Discord.'
             }));
         }
 
-        const challenge = createMathChallenge();
+        const challenge = createHumanChallenge();
         const bucket = getChallengeBucket(req.session);
         bucket[token] = {
             guildId,
             answer: challenge.answer,
+            verificationCode: challenge.verificationCode,
             createdAt: Date.now()
         };
 
@@ -459,6 +483,7 @@ export function createVerifyRouter(client) {
             roleName: role.name,
             panelDescription: config.panelDescription,
             challengePrompt: challenge.prompt,
+            verificationCode: challenge.verificationCode,
             expiresAt: tokenEntry.expiresAt,
             minAccountAgeDays: config.minAccountAgeDays
         }));
@@ -477,9 +502,37 @@ export function createVerifyRouter(client) {
             return res.status(400).json({ success: false, error: 'La comprobación humana ya no es válida. Recarga la página.' });
         }
 
+        challenge.attempts = (challenge.attempts || 0) + 1;
+
+        if (challenge.attempts > 5) {
+            delete getChallengeBucket(req.session)[token];
+            return res.status(429).json({
+                success: false,
+                error: 'Demasiados intentos fallidos. Recarga la página para generar un nuevo reto.'
+            });
+        }
+
         const submittedAnswer = String(req.body?.answer || '').trim();
+        const submittedCode = String(req.body?.code || '').trim().toUpperCase();
+        const honeypotValue = String(req.body?.website || '').trim();
+
+        if (honeypotValue) {
+            return res.status(400).json({ success: false, error: 'La comprobación humana falló.' });
+        }
+
+        if ((Date.now() - challenge.createdAt) < 3500) {
+            return res.status(400).json({
+                success: false,
+                error: 'La verificación fue demasiado rápida. Espera unos segundos y vuelve a intentarlo.'
+            });
+        }
+
         if (!submittedAnswer || submittedAnswer !== challenge.answer) {
             return res.status(400).json({ success: false, error: 'La respuesta del reto no es correcta.' });
+        }
+
+        if (!submittedCode || submittedCode !== challenge.verificationCode) {
+            return res.status(400).json({ success: false, error: 'El código de verificación no coincide.' });
         }
 
         const guild = client.guilds.cache.get(guildId);
@@ -522,7 +575,7 @@ export function createVerifyRouter(client) {
         if (minAgeMs > 0 && (Date.now() - member.user.createdTimestamp) < minAgeMs) {
             return res.status(403).json({
                 success: false,
-                error: `Tu cuenta debe tener al menos ${config.minAccountAgeDays} día(s) para completar esta verificación.`
+                error: `Tu cuenta debe tener una antigüedad mínima de ${config.minAccountAgeDays} día(s) para completar esta verificación.`
             });
         }
 
